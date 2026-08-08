@@ -1,7 +1,10 @@
 'use client'
-import { useEffect } from 'react'
+
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/authStore'
+import Navbar from '@/components/layout/Navbar'
+import Sidebar from '@/components/layout/Sidebar'
 
 export default function DashboardLayout({
   children,
@@ -10,9 +13,9 @@ export default function DashboardLayout({
 }) {
   const router = useRouter()
   const { isAuthenticated } = useAuthStore()
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
 
   useEffect(() => {
-    // Check Zustand store first, then fall back to localStorage
     const storedToken = localStorage.getItem('accessToken')
     if (!isAuthenticated && !storedToken) {
       router.replace('/login')
@@ -26,8 +29,29 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {children}
+    <div className="flex h-screen overflow-hidden bg-background">
+      {/* Sidebar — handles its own desktop/mobile rendering */}
+      <Sidebar
+        mobileOpen={mobileSidebarOpen}
+        onMobileClose={() => setMobileSidebarOpen(false)}
+      />
+
+      {/* Main content column */}
+      <div className="flex flex-1 flex-col overflow-hidden min-w-0">
+        {/* Top navbar (dashboard variant) — shows hamburger for mobile */}
+        <Navbar
+          variant="dashboard"
+          onMenuClick={() => setMobileSidebarOpen(true)}
+        />
+
+        {/* Page content */}
+        <main
+          id="dashboard-main"
+          className="flex-1 overflow-y-auto p-4 lg:p-6"
+        >
+          {children}
+        </main>
+      </div>
     </div>
   )
 }
