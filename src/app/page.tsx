@@ -88,8 +88,9 @@ const features = [
     visual: (
       <div className="grid grid-cols-7 gap-0.5">
         {Array.from({ length: 28 }, (_, i) => {
-          const intensity = Math.random()
-          const opacity = intensity > 0.7 ? 'opacity-90' : intensity > 0.4 ? 'opacity-50' : 'opacity-15'
+          // Use a deterministic pattern to avoid SSR Hydration mismatches
+          const pattern = ['opacity-90', 'opacity-15', 'opacity-50', 'opacity-15', 'opacity-90', 'opacity-15', 'opacity-50']
+          const opacity = pattern[i % pattern.length]
           return (
             <div
               key={i}
@@ -491,7 +492,7 @@ export default function LandingPage() {
             </span>
           </div>
           <p>Built with Next.js 14 · TypeScript · shadcn/ui · React Query · Socket.io · Three.js</p>
-          <p>© {new Date().getFullYear()} FlowMetrics. All rights reserved.</p>
+          <p>© 2026 FlowMetrics. All rights reserved.</p>
         </div>
       </footer>
     </div>
