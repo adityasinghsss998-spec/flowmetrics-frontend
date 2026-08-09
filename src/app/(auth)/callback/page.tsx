@@ -17,19 +17,26 @@ function CallbackContent() {
       return
     }
 
-    localStorage.setItem('accessToken', accessToken)
-    localStorage.setItem('refreshToken', refreshToken)
-
-    // Decode JWT payload (base64, not encrypted — safe to decode client-side)
     try {
-      const payload = JSON.parse(atob(accessToken.split('.')[1]))
+    
+      const base64Url = accessToken.split('.')[1]
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+      const payload = JSON.parse(atob(base64))
+      
+      
+      localStorage.setItem('accessToken', accessToken)
+      localStorage.setItem('refreshToken', refreshToken)
+      
       setTokens({ accessToken, refreshToken, user: payload })
       router.replace('/dashboard')
     } catch {
+    
+      localStorage.removeItem('accessToken')
+      localStorage.removeItem('refreshToken')
       router.replace('/login?error=invalid_token')
     }
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [])
 
   return (
@@ -58,5 +65,3 @@ export default function CallbackHandler() {
     </Suspense>
   )
 }
-
-
