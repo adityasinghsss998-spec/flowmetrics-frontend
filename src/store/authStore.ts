@@ -27,7 +27,10 @@ export const useAuthStore = create<AuthState>()(
       setTokens: ({ accessToken, refreshToken, user }) =>
         set({ accessToken, refreshToken, user, isAuthenticated: true }),
       logout: () => {
-        localStorage.clear()
+       localStorage.removeItem('accessToken')
+        localStorage.removeItem('refreshToken')
+        localStorage.removeItem('githubToken')
+        localStorage.removeItem('flowmetrics-auth')
         set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false })
       },
     }),
