@@ -13,38 +13,39 @@ export default function DashboardLayout({
 }) {
   const router = useRouter()
   const { isAuthenticated } = useAuthStore()
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    const storedToken = localStorage.getItem('accessToken')
-    if (!isAuthenticated && !storedToken) {
+    setMounted(true)
+    const token = localStorage.getItem('accessToken')
+    if (!isAuthenticated && !token) {
       router.replace('/login')
     }
   }, [isAuthenticated, router])
 
-  // Prevent flash of authenticated content while redirecting
-  const storedToken = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
-  if (!isAuthenticated && !storedToken) {
+  if (!mounted) {
+    return null
+  }
+
+  const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
+  if (!isAuthenticated && !token) {
     return null
   }
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      {/* Sidebar — handles its own desktop/mobile rendering */}
       <Sidebar
-        mobileOpen={mobileSidebarOpen}
-        onMobileClose={() => setMobileSidebarOpen(false)}
+        mobileOpen={mobileOpen}
+        onMobileClose={() => setMobileOpen(false)}
       />
 
-      {/* Main content column */}
       <div className="flex flex-1 flex-col overflow-hidden min-w-0">
-        {/* Top navbar (dashboard variant) — shows hamburger for mobile */}
         <Navbar
           variant="dashboard"
-          onMenuClick={() => setMobileSidebarOpen(true)}
+          onMenuClick={() => setMobileOpen(true)}
         />
 
-        {/* Page content */}
         <main
           id="dashboard-main"
           className="flex-1 overflow-y-auto p-4 lg:p-6"
