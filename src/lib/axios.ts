@@ -19,7 +19,12 @@ api.interceptors.request.use((config) => {
 
 // Silent token refresh on 401
 let isRefreshing = false
-let subscribers: ((token: string) => void)[] = []
+
+type RefreshSubscriber = {
+  resolve: (token: string) => void
+  reject: (error: unknown) => void
+}
+let subscribers: RefreshSubscriber[] = []
 
 api.interceptors.response.use(
   (response) => response,
@@ -28,10 +33,13 @@ api.interceptors.response.use(
 
     if (error.response?.status === 401 && !original._retry) {
       if (isRefreshing) {
-        return new Promise((resolve) => {
-          subscribers.push((token) => {
-            original.headers.Authorization = `Bearer ${token}`
-            resolve(api(original))
+        return new Promise((resolve, reject) => {
+          subscribers.push({
+            resolve: (token) => {
+              original.headers.Authorization = `Bearer ${token}`
+              resolve(api(original))
+            },
+            reject,
           })
         })
       }
@@ -49,15 +57,22 @@ api.interceptors.response.use(
         const newToken = data.data.accessToken
         localStorage.setItem('accessToken', newToken)
         isRefreshing = false
-        subscribers.forEach((cb) => cb(newToken))
+        subscribers.forEach(({ resolve }) => resolve(newToken))
         subscribers = []
 
         original.headers.Authorization = `Bearer ${newToken}`
         return api(original)
       } catch {
         isRefreshing = false
+        subscribers.forEach(({ reject }) => reject(error))
         subscribers = []
-        localStorage.clear()
+        
+        // Targeted cleanup to preserve unrelated application state
+        localStorage.removeItem('accessToken')
+        localStorage.removeItem('refreshToken')
+        localStorage.removeItem('githubToken')
+        localStorage.removeItem('flowmetrics-auth')
+        
         // Also clear the Zustand store
         useAuthStore.getState().logout()
         window.location.href = '/login'
