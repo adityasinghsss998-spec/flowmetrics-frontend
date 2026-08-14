@@ -11,16 +11,25 @@ function GitHubSettingsContent() {
   const { fetchMe } = useAuthStore()
 
   useEffect(() => {
+    let timer: NodeJS.Timeout | null = null
+    let cancelled = false
+
     async function init() {
       await fetchMe()
-      const timer = setTimeout(() => {
-        router.replace('/dashboard')
+      timer = setTimeout(() => {
+        if (!cancelled) {
+          router.replace('/dashboard')
+        }
       }, 1500)
-      return () => clearTimeout(timer)
     }
 
     init()
-  }, [fetchMe, router, searchParams])
+
+    return () => {
+      cancelled = true
+      if (timer) clearTimeout(timer)
+    }
+  }, [fetchMe, router])
 
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">

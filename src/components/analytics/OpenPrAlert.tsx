@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 interface OpenPrAlertProps {
   data: OpenPr[]
   isLoading: boolean
+  isError?: boolean
 }
 
 function PrRow({ pr }: { pr: OpenPr }) {
@@ -65,7 +66,12 @@ function PrRow({ pr }: { pr: OpenPr }) {
         )}>
           <Clock className="h-2.5 w-2.5" />
           {pr.waiting_hours >= 24
-            ? `${Math.floor(pr.waiting_hours / 24)}d ${Math.round(pr.waiting_hours % 24)}h`
+            ? (() => {
+                const roundedHours = Math.round(pr.waiting_hours)
+                const days = Math.floor(roundedHours / 24)
+                const hours = roundedHours % 24
+                return `${days}d ${hours}h`
+              })()
             : `${Math.round(pr.waiting_hours)}h`}
         </div>
 
@@ -109,7 +115,7 @@ function PrRow({ pr }: { pr: OpenPr }) {
   )
 }
 
-export default function OpenPrAlert({ data, isLoading }: OpenPrAlertProps) {
+export default function OpenPrAlert({ data, isLoading, isError }: OpenPrAlertProps) {
   const critical = data.filter((p) => p.is_critical)
   const stale = data.filter((p) => !p.is_critical && p.is_stale)
   const needs = data.filter((p) => !p.is_critical && !p.is_stale && p.needs_review)
@@ -160,6 +166,14 @@ export default function OpenPrAlert({ data, isLoading }: OpenPrAlertProps) {
             {[1, 2, 3].map((i) => (
               <div key={i} className="h-20 rounded-xl bg-white/[0.03] animate-pulse" />
             ))}
+          </div>
+        ) : isError ? (
+          <div className="flex flex-col items-center justify-center py-10 text-center h-full">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/10 mb-3">
+              <AlertTriangle className="h-5 w-5 text-red-400" />
+            </div>
+            <p className="text-sm font-semibold text-red-400">Error loading PRs</p>
+            <p className="text-xs text-muted-foreground/50 mt-1">Please try again later.</p>
           </div>
         ) : sorted.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 text-center h-full">

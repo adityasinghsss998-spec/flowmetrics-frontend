@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils'
 interface RecentDeploymentsProps {
   data: RecentDeployment[]
   isLoading: boolean
+  isError?: boolean
 }
 
 const STATUS_CONFIG = {
@@ -52,7 +53,7 @@ const ENV_COLORS: Record<string, string> = {
   development: 'text-slate-400',
 }
 
-export default function RecentDeployments({ data, isLoading }: RecentDeploymentsProps) {
+export default function RecentDeployments({ data, isLoading, isError }: RecentDeploymentsProps) {
   return (
     <Card className="border-border/40 bg-card/80 backdrop-blur h-full">
       <CardHeader className="pb-2">
@@ -73,6 +74,12 @@ export default function RecentDeployments({ data, isLoading }: RecentDeployments
             {[1, 2, 3, 4, 5].map((i) => (
               <div key={i} className="h-10 rounded bg-muted/30 animate-pulse" />
             ))}
+          </div>
+        ) : isError ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <XCircle className="h-8 w-8 text-red-400/50 mb-3" />
+            <p className="text-sm font-medium text-red-400">Error loading deployments</p>
+            <p className="text-xs text-muted-foreground/60 mt-1">Please try again later.</p>
           </div>
         ) : data.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">

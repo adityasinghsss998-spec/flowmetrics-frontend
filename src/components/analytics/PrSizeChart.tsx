@@ -16,6 +16,7 @@ import { Layers } from 'lucide-react'
 interface PrSizeChartProps {
   data: PrSizeBucket[]
   isLoading: boolean
+  isError?: boolean
 }
 
 const SIZE_CONFIG: Record<string, { color: string; label: string; lightColor: string }> = {
@@ -56,7 +57,7 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: Toolti
   )
 }
 
-export default function PrSizeChart({ data, isLoading }: PrSizeChartProps) {
+export default function PrSizeChart({ data, isLoading, isError }: PrSizeChartProps) {
   const chartData = data.map((d) => ({
   ...d,
   color: SIZE_CONFIG[d.size_bucket]?.color ?? '#94a3b8',
@@ -109,6 +110,12 @@ export default function PrSizeChart({ data, isLoading }: PrSizeChartProps) {
         {isLoading ? (
           <div className="px-3 pb-1 space-y-3">
             <div className="h-52 w-full rounded-xl bg-white/[0.03] animate-pulse" />
+          </div>
+        ) : isError ? (
+          <div className="flex h-56 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-red-500/20 bg-red-500/5 mx-3 mb-3">
+            <Layers className="h-7 w-7 text-red-400/50" />
+            <p className="text-sm text-red-400">Error loading PR size data</p>
+            <p className="text-xs text-muted-foreground/50">Please try again later</p>
           </div>
         ) : data.length === 0 ? (
           <div className="flex h-56 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-white/[0.05] mx-3 mb-3">

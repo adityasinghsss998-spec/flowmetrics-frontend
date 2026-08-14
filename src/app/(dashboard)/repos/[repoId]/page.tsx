@@ -19,6 +19,13 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
 
 export default function RepoDashboardPage() {
   const params = useParams()
@@ -26,7 +33,8 @@ export default function RepoDashboardPage() {
   const searchParams = useSearchParams()
   const qc = useQueryClient()
   const repoId = params.repoId as string
-  const days = Number(searchParams.get('days') ?? 30)
+  const rawDays = Number(searchParams.get('days') ?? 30)
+  const days = Number.isFinite(rawDays) && rawDays > 0 && [7, 30, 60, 90].includes(rawDays) ? rawDays : 30
   const [confirmOpen, setConfirmOpen] = useState(false)
 
   const disconnectMutation = useMutation({
@@ -147,16 +155,15 @@ export default function RepoDashboardPage() {
         </div>
       </div>
 
-      {confirmOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setConfirmOpen(false)} />
-          <div className="relative z-10 w-full max-w-md rounded-2xl border border-white/[0.08] bg-card shadow-2xl p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-white/[0.06] pb-4">
+      <Dialog open={confirmOpen} onOpenChange={(newOpen) => !newOpen && setConfirmOpen(false)}>
+        <DialogContent showCloseButton={false} className="w-full max-w-md rounded-2xl border border-white/[0.08] bg-card shadow-2xl p-6 space-y-4">
+          <DialogHeader className="border-b border-white/[0.06] pb-4">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-red-500/20 bg-red-500/10">
                   <Trash2 className="h-3.5 w-3.5 text-red-400" />
                 </div>
-                <span className="text-sm font-semibold text-foreground">Disconnect Repository</span>
+                <DialogTitle className="text-sm font-semibold text-foreground">Disconnect Repository</DialogTitle>
               </div>
               <button
                 type="button"
@@ -166,31 +173,31 @@ export default function RepoDashboardPage() {
                 <X className="h-4 w-4" />
               </button>
             </div>
+          </DialogHeader>
 
-            <p className="text-xs text-muted-foreground">
-              Are you sure you want to disconnect repository <strong className="text-foreground font-semibold">#{repoId}</strong>? Webhook tracking will stop and you will be returned to the dashboard.
-            </p>
+          <DialogDescription className="text-xs text-muted-foreground">
+            Are you sure you want to disconnect repository <strong className="text-foreground font-semibold">#{repoId}</strong>? Webhook tracking will stop and you will be returned to the dashboard.
+          </DialogDescription>
 
-            <div className="flex justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setConfirmOpen(false)}
-                className="h-9 px-4 rounded-lg border border-white/[0.08] text-xs font-semibold text-muted-foreground hover:bg-white/[0.05] transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={disconnectMutation.isPending}
-                onClick={() => disconnectMutation.mutate()}
-                className="h-9 px-4 rounded-lg bg-red-600 text-xs font-semibold text-white hover:bg-red-500 disabled:opacity-50 transition-colors"
-              >
-                {disconnectMutation.isPending ? 'Disconnecting…' : 'Disconnect Repository'}
-              </button>
-            </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => setConfirmOpen(false)}
+              className="h-9 px-4 rounded-lg border border-white/[0.08] text-xs font-semibold text-muted-foreground hover:bg-white/[0.05] transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={disconnectMutation.isPending}
+              onClick={() => disconnectMutation.mutate()}
+              className="h-9 px-4 rounded-lg bg-red-600 text-xs font-semibold text-white hover:bg-red-500 disabled:opacity-50 transition-colors"
+            >
+              {disconnectMutation.isPending ? 'Disconnecting…' : 'Disconnect Repository'}
+            </button>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
       <div className="relative">
         <div className="absolute -inset-4 rounded-3xl bg-gradient-to-r from-indigo-500/5 via-violet-500/5 to-transparent blur-2xl pointer-events-none" />
@@ -208,6 +215,7 @@ export default function RepoDashboardPage() {
             level={dora?.deployment_frequency.level ?? null}
             trend={dora?.deployment_frequency.trend_percent ?? null}
             isLoading={doraQuery.isLoading}
+            isError={doraQuery.isError}
           />
           <DoraScoreCard
             title="Lead Time for Changes"
@@ -216,6 +224,7 @@ export default function RepoDashboardPage() {
             level={dora?.lead_time.level ?? null}
             trend={null}
             isLoading={doraQuery.isLoading}
+            isError={doraQuery.isError}
           />
           <DoraScoreCard
             title="Change Failure Rate"
@@ -224,6 +233,7 @@ export default function RepoDashboardPage() {
             level={dora?.change_failure_rate.level ?? null}
             trend={null}
             isLoading={doraQuery.isLoading}
+            isError={doraQuery.isError}
           />
           <DoraScoreCard
             title="Mean Time to Recovery"
@@ -232,21 +242,22 @@ export default function RepoDashboardPage() {
             level={dora?.mean_time_to_recovery.level ?? null}
             trend={null}
             isLoading={doraQuery.isLoading}
+            isError={doraQuery.isError}
           />
         </div>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">
-        <CycleTimeTrend data={cycleTrendQuery.data ?? []} isLoading={cycleTrendQuery.isLoading} />
-        <PrSizeChart data={prSizeQuery.data ?? []} isLoading={prSizeQuery.isLoading} />
+        <CycleTimeTrend data={cycleTrendQuery.data ?? []} isLoading={cycleTrendQuery.isLoading} isError={cycleTrendQuery.isError} />
+        <PrSizeChart data={prSizeQuery.data ?? []} isLoading={prSizeQuery.isLoading} isError={prSizeQuery.isError} />
       </div>
 
       <div className="grid gap-5 lg:grid-cols-5">
         <div className="lg:col-span-2">
-          <OpenPrAlert data={openPrsQuery.data ?? []} isLoading={openPrsQuery.isLoading} />
+          <OpenPrAlert data={openPrsQuery.data ?? []} isLoading={openPrsQuery.isLoading} isError={openPrsQuery.isError} />
         </div>
         <div className="lg:col-span-3">
-          <RecentDeployments data={deploymentsQuery.data ?? []} isLoading={deploymentsQuery.isLoading} />
+          <RecentDeployments data={deploymentsQuery.data ?? []} isLoading={deploymentsQuery.isLoading} isError={deploymentsQuery.isError} />
         </div>
       </div>
     </div>

@@ -24,6 +24,13 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { useGithubConnect } from '@/hooks/useGithubConnect'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
 
 interface AvailableRepo {
   github_repo_id: number
@@ -145,8 +152,17 @@ function CreateOrgModal({
   const qc = useQueryClient()
 
   const mutation = useMutation({
-    mutationFn: (payload: { name: string; github_org_name: string }) =>
-      api.post('/orgs', payload).catch(() => api.post('/organizations', payload)),
+    mutationFn: async (payload: { name: string; github_org_name: string }) => {
+      try {
+        return await api.post('/orgs', payload)
+      } catch (err: any) {
+        // Only fallback to /organizations if the /orgs endpoint doesn't exist (404)
+        if (err?.response?.status === 404) {
+          return await api.post('/organizations', payload)
+        }
+        throw err
+      }
+    },
     onSuccess: (res) => {
       qc.invalidateQueries({ queryKey: ['orgs'] })
       const newOrg = res.data?.data
@@ -158,17 +174,6 @@ function CreateOrgModal({
       onClose()
     },
   })
-
-  useEffect(() => {
-    if (!open) return
-    function handler(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', handler)
-    return () => document.removeEventListener('keydown', handler)
-  }, [open, onClose])
-
-  if (!open) return null
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -182,24 +187,25 @@ function CreateOrgModal({
     : null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-md rounded-2xl border border-white/[0.08] bg-card shadow-2xl p-6">
-        <div className="flex items-center justify-between border-b border-white/[0.06] pb-4 mb-4">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-indigo-500/20 bg-indigo-500/10">
-              <Building2 className="h-3.5 w-3.5 text-indigo-400" />
+    <Dialog open={open} onOpenChange={(newOpen) => !newOpen && onClose()}>
+      <DialogContent showCloseButton={false} className="w-full max-w-md rounded-2xl border border-white/[0.08] bg-card shadow-2xl p-6">
+        <DialogHeader className="border-b border-white/[0.06] pb-4 mb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-indigo-500/20 bg-indigo-500/10">
+                <Building2 className="h-3.5 w-3.5 text-indigo-400" />
+              </div>
+              <DialogTitle className="text-sm font-semibold text-foreground">Create Organization</DialogTitle>
             </div>
-            <span className="text-sm font-semibold text-foreground">Create Organization</span>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-white/[0.05] hover:text-foreground transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-white/[0.05] hover:text-foreground transition-colors"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
+        </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -248,8 +254,8 @@ function CreateOrgModal({
             </button>
           </div>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -284,27 +290,15 @@ function ConnectModal({
   isGithubConnected: boolean
   onConnectGithub: () => void
 }) {
-  useEffect(() => {
-    if (!open) return
-    function handler(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', handler)
-    return () => document.removeEventListener('keydown', handler)
-  }, [open, onClose])
-
-  if (!open) return null
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-lg rounded-2xl border border-white/[0.08] bg-card shadow-2xl">
+    <Dialog open={open} onOpenChange={(newOpen) => !newOpen && onClose()}>
+      <DialogContent showCloseButton={false} className="w-full max-w-lg rounded-2xl border border-white/[0.08] bg-card shadow-2xl p-0">
         <div className="flex items-center justify-between border-b border-white/[0.06] px-5 py-4">
           <div className="flex items-center gap-2.5">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-indigo-500/20 bg-indigo-500/10">
               <GitBranch className="h-3.5 w-3.5 text-indigo-400" />
             </div>
-            <span className="text-sm font-semibold text-foreground">Connect a Repository</span>
+            <DialogTitle className="text-sm font-semibold text-foreground">Connect a Repository</DialogTitle>
           </div>
           <button
             type="button"
@@ -417,8 +411,8 @@ function ConnectModal({
 
           {error && <p className="text-xs text-red-400">{error}</p>}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -437,40 +431,30 @@ function DisconnectConfirmModal({
   onConfirm: () => void
   error: string | null
 }) {
-  useEffect(() => {
-    if (!open) return
-    function handler(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', handler)
-    return () => document.removeEventListener('keydown', handler)
-  }, [open, onClose])
-
-  if (!open) return null
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-md rounded-2xl border border-white/[0.08] bg-card shadow-2xl p-6 space-y-4">
-        <div className="flex items-center justify-between border-b border-white/[0.06] pb-4">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-red-500/20 bg-red-500/10">
-              <Trash2 className="h-3.5 w-3.5 text-red-400" />
+    <Dialog open={open} onOpenChange={(newOpen) => !newOpen && onClose()}>
+      <DialogContent showCloseButton={false} className="w-full max-w-md rounded-2xl border border-white/[0.08] bg-card shadow-2xl p-6 space-y-4">
+        <DialogHeader className="border-b border-white/[0.06] pb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-red-500/20 bg-red-500/10">
+                <Trash2 className="h-3.5 w-3.5 text-red-400" />
+              </div>
+              <DialogTitle className="text-sm font-semibold text-foreground">Disconnect Repository</DialogTitle>
             </div>
-            <span className="text-sm font-semibold text-foreground">Disconnect Repository</span>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-white/[0.05] hover:text-foreground transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-white/[0.05] hover:text-foreground transition-colors"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
+        </DialogHeader>
 
-        <p className="text-xs text-muted-foreground">
+        <DialogDescription className="text-xs text-muted-foreground">
           Are you sure you want to disconnect <strong className="text-foreground font-semibold">{repoName}</strong>? Webhook tracking will stop and the repository will be unlinked.
-        </p>
+        </DialogDescription>
 
         {error && <p className="text-xs text-red-400">{error}</p>}
 
@@ -492,8 +476,8 @@ function DisconnectConfirmModal({
             {isPending ? 'Disconnecting…' : 'Disconnect Repository'}
           </button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -511,7 +495,13 @@ function RepoCard({
       role="button"
       tabIndex={0}
       onClick={onClick}
-      onKeyDown={(e) => e.key === 'Enter' && onClick()}
+      onKeyDown={(e) => {
+        if (e.target !== e.currentTarget) return
+        if (e.key === 'Enter' || e.key === ' ') {
+          if (e.key === ' ') e.preventDefault()
+          onClick()
+        }
+      }}
       className={cn(
         'group relative cursor-pointer overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5',
         'backdrop-blur-xl transition-all duration-300',
@@ -595,8 +585,19 @@ export default function DashboardPage() {
 
   const orgsQuery = useQuery<OrgWithMembers[]>({
     queryKey: ['orgs'],
-    queryFn: () =>
-      api.get('/orgs').then((r) => r.data.data).catch(() => api.get('/organizations').then((r) => r.data.data)),
+    queryFn: async () => {
+      try {
+        const res = await api.get('/orgs')
+        return res.data.data
+      } catch (err: any) {
+        // Only fallback to /organizations if the /orgs endpoint doesn't exist (404)
+        if (err?.response?.status === 404) {
+          const res = await api.get('/organizations')
+          return res.data.data
+        }
+        throw err
+      }
+    },
     staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
   })

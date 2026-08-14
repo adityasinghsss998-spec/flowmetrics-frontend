@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils'
 interface CycleTimeTrendProps {
   data: CycleTimeTrendPoint[]
   isLoading: boolean
+  isError?: boolean
 }
 
 interface TooltipPayloadItem {
@@ -66,7 +67,7 @@ function CustomLegend({ payload }: { payload?: { color: string; value: string }[
   )
 }
 
-export default function CycleTimeTrend({ data, isLoading }: CycleTimeTrendProps) {
+export default function CycleTimeTrend({ data, isLoading, isError }: CycleTimeTrendProps) {
  const chartData = data.map((pt) => ({
     week: pt.week_start,
     'Cycle Time': pt.avg_cycle_hours != null ? Number(Number(pt.avg_cycle_hours).toFixed(2)) : 0,
@@ -109,6 +110,12 @@ export default function CycleTimeTrend({ data, isLoading }: CycleTimeTrendProps)
               <div className="h-3 w-20 rounded-full bg-white/[0.04] animate-pulse" />
               <div className="h-3 w-20 rounded-full bg-white/[0.04] animate-pulse" />
             </div>
+          </div>
+        ) : isError ? (
+          <div className="flex h-56 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-red-500/20 bg-red-500/5 mx-3 mb-3">
+            <GitPullRequest className="h-7 w-7 text-red-400/50" />
+            <p className="text-sm text-red-400">Error loading trend data</p>
+            <p className="text-xs text-muted-foreground/50">Please try again later</p>
           </div>
         ) : data.length === 0 ? (
           <div className="flex h-56 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-white/[0.05] mx-3 mb-3">
@@ -168,7 +175,6 @@ export default function CycleTimeTrend({ data, isLoading }: CycleTimeTrendProps)
                 strokeDasharray="5 3"
                 dot={false}
                 activeDot={{ r: 5, fill: '#a78bfa', strokeWidth: 2, stroke: 'rgba(167,139,250,0.3)', strokeOpacity: 1 }}
-                connectNulls
               />
             </LineChart>
           </ResponsiveContainer>

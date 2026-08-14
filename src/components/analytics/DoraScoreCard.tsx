@@ -5,11 +5,11 @@ import { TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export const DORA_COLORS = {
-  elite:   { bg: 'bg-emerald-500', text: 'text-emerald-400', hex: '#10b981', glow: 'shadow-emerald-500/20', border: 'border-emerald-500/20', strip: 'from-emerald-500 to-emerald-400', ambient: 'from-emerald-500/10 via-transparent to-transparent' },
-  high:    { bg: 'bg-blue-500',    text: 'text-blue-400',    hex: '#3b82f6', glow: 'shadow-blue-500/20',    border: 'border-blue-500/20',    strip: 'from-blue-500 to-blue-400',    ambient: 'from-blue-500/10 via-transparent to-transparent' },
-  medium:  { bg: 'bg-amber-500',   text: 'text-amber-400',   hex: '#f59e0b', glow: 'shadow-amber-500/20',   border: 'border-amber-500/20',   strip: 'from-amber-500 to-amber-400',   ambient: 'from-amber-500/10 via-transparent to-transparent' },
-  low:     { bg: 'bg-red-500',     text: 'text-red-400',     hex: '#ef4444', glow: 'shadow-red-500/20',     border: 'border-red-500/20',     strip: 'from-red-500 to-red-400',     ambient: 'from-red-500/10 via-transparent to-transparent' },
-  unknown: { bg: 'bg-slate-400',   text: 'text-slate-400',   hex: '#94a3b8', glow: 'shadow-slate-500/10',   border: 'border-slate-500/10',   strip: 'from-slate-500 to-slate-400',   ambient: 'from-slate-500/5 via-transparent to-transparent' },
+  elite:   { bg: 'bg-emerald-500', text: 'text-emerald-400', hex: '#10b981', glow: 'hover:shadow-xl hover:shadow-emerald-500/20', border: 'border-emerald-500/20', strip: 'from-emerald-500 to-emerald-400', ambient: 'from-emerald-500/10 via-transparent to-transparent' },
+  high:    { bg: 'bg-blue-500',    text: 'text-blue-400',    hex: '#3b82f6', glow: 'hover:shadow-xl hover:shadow-blue-500/20',    border: 'border-blue-500/20',    strip: 'from-blue-500 to-blue-400',    ambient: 'from-blue-500/10 via-transparent to-transparent' },
+  medium:  { bg: 'bg-amber-500',   text: 'text-amber-400',   hex: '#f59e0b', glow: 'hover:shadow-xl hover:shadow-amber-500/20',   border: 'border-amber-500/20',   strip: 'from-amber-500 to-amber-400',   ambient: 'from-amber-500/10 via-transparent to-transparent' },
+  low:     { bg: 'bg-red-500',     text: 'text-red-400',     hex: '#ef4444', glow: 'hover:shadow-xl hover:shadow-red-500/20',     border: 'border-red-500/20',     strip: 'from-red-500 to-red-400',     ambient: 'from-red-500/10 via-transparent to-transparent' },
+  unknown: { bg: 'bg-slate-400',   text: 'text-slate-400',   hex: '#94a3b8', glow: 'hover:shadow-xl hover:shadow-slate-500/10',   border: 'border-slate-500/10',   strip: 'from-slate-500 to-slate-400',   ambient: 'from-slate-500/5 via-transparent to-transparent' },
 } as const
 
 interface DoraScoreCardProps {
@@ -19,9 +19,10 @@ interface DoraScoreCardProps {
   level: DoraLevel | null
   trend: number | null
   isLoading: boolean
+  isError?: boolean
 }
 
-export default function DoraScoreCard({ title, value, subtitle, level, trend, isLoading }: DoraScoreCardProps) {
+export default function DoraScoreCard({ title, value, subtitle, level, trend, isLoading, isError }: DoraScoreCardProps) {
   const colors = level ? DORA_COLORS[level] : DORA_COLORS.unknown
 
   if (isLoading) {
@@ -38,13 +39,29 @@ export default function DoraScoreCard({ title, value, subtitle, level, trend, is
     )
   }
 
+  if (isError) {
+    return (
+      <div className="relative overflow-hidden rounded-2xl border border-red-500/20 bg-red-500/5 backdrop-blur-xl p-5">
+        <div className="relative space-y-3">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/70">
+            {title}
+          </p>
+          <div className="flex items-center gap-2">
+            <span className="text-2xl font-bold text-red-400">Error</span>
+          </div>
+          <p className="text-xs text-muted-foreground/60">Failed to load metric</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className={cn(
       'group relative overflow-hidden rounded-2xl border backdrop-blur-xl p-5',
       'bg-white/[0.03] hover:bg-white/[0.05]',
       'transition-all duration-300 hover:-translate-y-1',
       colors.border,
-      !isLoading && level && `hover:${colors.glow} hover:shadow-xl`
+      !isLoading && level && colors.glow
     )}>
       <div className={cn(
         'absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-500',
@@ -91,9 +108,8 @@ export default function DoraScoreCard({ title, value, subtitle, level, trend, is
         {level && (
           <div className={cn(
             'inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5',
-            colors.border,
-            `bg-[${colors.hex}]/5`
-          )}>
+            colors.border
+          )} style={{ backgroundColor: `${colors.hex}15` }}>
             <div className={cn('h-1.5 w-1.5 rounded-full animate-pulse', colors.bg)} />
             <span className={cn('text-[10px] font-bold uppercase tracking-widest', colors.text)}>
               {level}
