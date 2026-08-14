@@ -106,6 +106,16 @@ export interface ContributorData {
   commits: CommitStats[]
 }
 
+export interface ContributorTrendPoint {
+  year_week: number
+  week_start: string
+  prs_merged: number
+  avg_cycle_hours: number | null
+  avg_lead_time_hours: number | null
+  lines_changed: number
+  total_commits: number
+}
+
 export interface HeatmapPoint {
   day_of_week: number  // 1=Sunday ... 7=Saturday
   day_name: string

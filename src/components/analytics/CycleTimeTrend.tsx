@@ -168,7 +168,6 @@ export default function CycleTimeTrend({ data, isLoading }: CycleTimeTrendProps)
                 strokeDasharray="5 3"
                 dot={false}
                 activeDot={{ r: 5, fill: '#a78bfa', strokeWidth: 2, stroke: 'rgba(167,139,250,0.3)', strokeOpacity: 1 }}
-                connectNulls
               />
             </LineChart>
           </ResponsiveContainer>

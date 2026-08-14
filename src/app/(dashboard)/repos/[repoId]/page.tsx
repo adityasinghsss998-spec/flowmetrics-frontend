@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Clock, Activity, Zap, Trash2, X } from 'lucide-react'
+import { ArrowLeft, Clock, Activity, Zap, Trash2, X, AlertTriangle } from 'lucide-react'
 import api from '@/lib/axios'
 import { DoraMetrics, CycleTimeTrendPoint, PrSizeBucket, OpenPr, RecentDeployment } from '@/types/api'
 import DoraScoreCard from '@/components/analytics/DoraScoreCard'
@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
 
 export default function RepoDashboardPage() {
   const params = useParams()
@@ -147,48 +148,52 @@ export default function RepoDashboardPage() {
         </div>
       </div>
 
-      {confirmOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setConfirmOpen(false)} />
-          <div className="relative z-10 w-full max-w-md rounded-2xl border border-white/[0.08] bg-card shadow-2xl p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-white/[0.06] pb-4">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-red-500/20 bg-red-500/10">
-                  <Trash2 className="h-3.5 w-3.5 text-red-400" />
-                </div>
-                <span className="text-sm font-semibold text-foreground">Disconnect Repository</span>
+      <Dialog open={confirmOpen} onOpenChange={(val) => { if (!val) setConfirmOpen(false) }}>
+        <DialogContent className="max-w-md border-white/[0.08] bg-card shadow-2xl p-6 space-y-4" showCloseButton={false}>
+          <div className="flex items-center justify-between border-b border-white/[0.06] pb-4">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-red-500/20 bg-red-500/10">
+                <Trash2 className="h-3.5 w-3.5 text-red-400" />
               </div>
-              <button
-                type="button"
-                onClick={() => setConfirmOpen(false)}
-                className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-white/[0.05] hover:text-foreground transition-colors"
-              >
-                <X className="h-4 w-4" />
-              </button>
+              <span className="text-sm font-semibold text-foreground">Disconnect Repository</span>
             </div>
-
-            <p className="text-xs text-muted-foreground">
-              Are you sure you want to disconnect repository <strong className="text-foreground font-semibold">#{repoId}</strong>? Webhook tracking will stop and you will be returned to the dashboard.
-            </p>
-
-            <div className="flex justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setConfirmOpen(false)}
-                className="h-9 px-4 rounded-lg border border-white/[0.08] text-xs font-semibold text-muted-foreground hover:bg-white/[0.05] transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={disconnectMutation.isPending}
-                onClick={() => disconnectMutation.mutate()}
-                className="h-9 px-4 rounded-lg bg-red-600 text-xs font-semibold text-white hover:bg-red-500 disabled:opacity-50 transition-colors"
-              >
-                {disconnectMutation.isPending ? 'Disconnecting…' : 'Disconnect Repository'}
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => setConfirmOpen(false)}
+              className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-white/[0.05] hover:text-foreground transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
           </div>
+
+          <p className="text-xs text-muted-foreground">
+            Are you sure you want to disconnect repository <strong className="text-foreground font-semibold">#{repoId}</strong>? Webhook tracking will stop and you will be returned to the dashboard.
+          </p>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => setConfirmOpen(false)}
+              className="h-9 px-4 rounded-lg border border-white/[0.08] text-xs font-semibold text-muted-foreground hover:bg-white/[0.05] transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={disconnectMutation.isPending}
+              onClick={() => disconnectMutation.mutate()}
+              className="h-9 px-4 rounded-lg bg-red-600 text-xs font-semibold text-white hover:bg-red-500 disabled:opacity-50 transition-colors"
+            >
+              {disconnectMutation.isPending ? 'Disconnecting…' : 'Disconnect Repository'}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {(doraQuery.isError || cycleTrendQuery.isError || prSizeQuery.isError || openPrsQuery.isError || deploymentsQuery.isError) && (
+        <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-xs font-semibold text-red-400 flex items-center gap-2.5">
+          <AlertTriangle className="h-4 w-4 shrink-0" />
+          <span>Failed to load analytics data for this repository. Please verify API Gateway and service connectivity.</span>
         </div>
       )}
 
@@ -203,32 +208,32 @@ export default function RepoDashboardPage() {
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <DoraScoreCard
             title="Deployment Frequency"
-            value={dora ? `${dora.deployment_frequency.deployments_per_week.toFixed(1)}/wk` : null}
-            subtitle={dora ? `${dora.deployment_frequency.total_deployments} total · ${dora.deployment_frequency.successful} success` : null}
+            value={dora ? `${dora.deployment_frequency.deployments_per_week.toFixed(1)}/wk` : doraQuery.isError ? 'Error' : null}
+            subtitle={dora ? `${dora.deployment_frequency.total_deployments} total · ${dora.deployment_frequency.successful} success` : doraQuery.isError ? 'Failed to load' : null}
             level={dora?.deployment_frequency.level ?? null}
             trend={dora?.deployment_frequency.trend_percent ?? null}
             isLoading={doraQuery.isLoading}
           />
           <DoraScoreCard
             title="Lead Time for Changes"
-            value={dora?.lead_time.avg_lead_time_hours != null ? `${dora.lead_time.avg_lead_time_hours.toFixed(1)}h` : null}
-            subtitle={dora ? `${dora.lead_time.total_prs} PRs · ${dora.lead_time.prs_with_lead_time} measured` : null}
+            value={dora?.lead_time.avg_lead_time_hours != null ? `${dora.lead_time.avg_lead_time_hours.toFixed(1)}h` : doraQuery.isError ? 'Error' : null}
+            subtitle={dora ? `${dora.lead_time.total_prs} PRs · ${dora.lead_time.prs_with_lead_time} measured` : doraQuery.isError ? 'Failed to load' : null}
             level={dora?.lead_time.level ?? null}
             trend={null}
             isLoading={doraQuery.isLoading}
           />
           <DoraScoreCard
             title="Change Failure Rate"
-            value={dora ? `${dora.change_failure_rate.failure_rate_percent.toFixed(1)}%` : null}
-            subtitle={dora ? `${dora.change_failure_rate.failed_deployments} of ${dora.change_failure_rate.total_deployments} failed` : null}
+            value={dora ? `${dora.change_failure_rate.failure_rate_percent.toFixed(1)}%` : doraQuery.isError ? 'Error' : null}
+            subtitle={dora ? `${dora.change_failure_rate.failed_deployments} of ${dora.change_failure_rate.total_deployments} failed` : doraQuery.isError ? 'Failed to load' : null}
             level={dora?.change_failure_rate.level ?? null}
             trend={null}
             isLoading={doraQuery.isLoading}
           />
           <DoraScoreCard
             title="Mean Time to Recovery"
-            value={dora?.mean_time_to_recovery.avg_mttr_hours != null ? `${dora.mean_time_to_recovery.avg_mttr_hours.toFixed(1)}h` : null}
-            subtitle={dora ? `${dora.mean_time_to_recovery.incidents_recovered} incidents recovered` : null}
+            value={dora?.mean_time_to_recovery.avg_mttr_hours != null ? `${dora.mean_time_to_recovery.avg_mttr_hours.toFixed(1)}h` : doraQuery.isError ? 'Error' : null}
+            subtitle={dora ? `${dora.mean_time_to_recovery.incidents_recovered} incidents recovered` : doraQuery.isError ? 'Failed to load' : null}
             level={dora?.mean_time_to_recovery.level ?? null}
             trend={null}
             isLoading={doraQuery.isLoading}

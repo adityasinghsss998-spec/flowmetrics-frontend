@@ -24,6 +24,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { useGithubConnect } from '@/hooks/useGithubConnect'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
 
 interface AvailableRepo {
   github_repo_id: number
@@ -146,7 +147,12 @@ function CreateOrgModal({
 
   const mutation = useMutation({
     mutationFn: (payload: { name: string; github_org_name: string }) =>
-      api.post('/orgs', payload).catch(() => api.post('/organizations', payload)),
+      api.post('/orgs', payload).catch((err) => {
+        if (err.response?.status === 404) {
+          return api.post('/organizations', payload)
+        }
+        throw err
+      }),
     onSuccess: (res) => {
       qc.invalidateQueries({ queryKey: ['orgs'] })
       const newOrg = res.data?.data
@@ -158,17 +164,6 @@ function CreateOrgModal({
       onClose()
     },
   })
-
-  useEffect(() => {
-    if (!open) return
-    function handler(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', handler)
-    return () => document.removeEventListener('keydown', handler)
-  }, [open, onClose])
-
-  if (!open) return null
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -182,9 +177,8 @@ function CreateOrgModal({
     : null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-md rounded-2xl border border-white/[0.08] bg-card shadow-2xl p-6">
+    <Dialog open={open} onOpenChange={(val) => { if (!val) onClose() }}>
+      <DialogContent className="max-w-md border-white/[0.08] bg-card shadow-2xl p-6" showCloseButton={false}>
         <div className="flex items-center justify-between border-b border-white/[0.06] pb-4 mb-4">
           <div className="flex items-center gap-2.5">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-indigo-500/20 bg-indigo-500/10">
@@ -248,8 +242,8 @@ function CreateOrgModal({
             </button>
           </div>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -284,21 +278,9 @@ function ConnectModal({
   isGithubConnected: boolean
   onConnectGithub: () => void
 }) {
-  useEffect(() => {
-    if (!open) return
-    function handler(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', handler)
-    return () => document.removeEventListener('keydown', handler)
-  }, [open, onClose])
-
-  if (!open) return null
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-lg rounded-2xl border border-white/[0.08] bg-card shadow-2xl">
+    <Dialog open={open} onOpenChange={(val) => { if (!val) onClose() }}>
+      <DialogContent className="sm:max-w-3xl w-[95vw] border-white/[0.08] bg-card p-0 shadow-2xl overflow-hidden" showCloseButton={false}>
         <div className="flex items-center justify-between border-b border-white/[0.06] px-5 py-4">
           <div className="flex items-center gap-2.5">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-indigo-500/20 bg-indigo-500/10">
@@ -362,7 +344,7 @@ function ConnectModal({
               </div>
             </div>
           ) : (
-            <div className="max-h-80 overflow-y-auto space-y-2 pr-0.5">
+            <div className="flex flex-col gap-3 max-h-[60vh] overflow-y-auto overflow-x-hidden pr-2">
               {isLoadingRepos && (
                 <div className="space-y-2">
                   {[1, 2, 3].map((i) => (
@@ -380,36 +362,23 @@ function ConnectModal({
               )}
 
               {availableRepos.map((repo) => (
-                <div
-                  key={repo.github_repo_id}
-                  className="flex items-center justify-between rounded-xl border border-white/[0.05] bg-white/[0.02] p-3 transition-all hover:border-indigo-500/20 hover:bg-white/[0.04]"
+                <div 
+                  key={repo.github_repo_id} 
+                  className="grid grid-cols-[1fr_auto] items-center gap-4 p-3 border rounded-lg bg-card w-full"
                 >
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <div className={cn(
-                      'flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border',
-                      repo.is_private ? 'border-amber-500/20 bg-amber-500/10' : 'border-emerald-500/20 bg-emerald-500/10'
-                    )}>
-                      {repo.is_private
-                        ? <Lock className="h-3 w-3 text-amber-400" />
-                        : <Globe className="h-3 w-3 text-emerald-400" />
-                      }
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">{repo.full_name}</p>
-                      {repo.description && (
-                        <p className="text-xs text-muted-foreground/50 truncate">{repo.description}</p>
-                      )}
-                    </div>
+                  <div className="min-w-0">
+                    <div className="font-medium text-sm truncate">{repo.full_name}</div>
+                    {repo.description && (
+                      <div className="text-xs text-muted-foreground truncate">{repo.description}</div>
+                    )}
                   </div>
-                  <button
+                  <Button
                     id={`connect-${repo.github_repo_id}`}
-                    type="button"
                     disabled={isPending && connectingRepo === repo.full_name}
                     onClick={() => onConnect(repo.full_name)}
-                    className="ml-3 shrink-0 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-500 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
                   >
                     {isPending && connectingRepo === repo.full_name ? 'Connecting…' : 'Connect'}
-                  </button>
+                  </Button>
                 </div>
               ))}
             </div>
@@ -417,8 +386,8 @@ function ConnectModal({
 
           {error && <p className="text-xs text-red-400">{error}</p>}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -437,21 +406,9 @@ function DisconnectConfirmModal({
   onConfirm: () => void
   error: string | null
 }) {
-  useEffect(() => {
-    if (!open) return
-    function handler(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', handler)
-    return () => document.removeEventListener('keydown', handler)
-  }, [open, onClose])
-
-  if (!open) return null
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-md rounded-2xl border border-white/[0.08] bg-card shadow-2xl p-6 space-y-4">
+    <Dialog open={open} onOpenChange={(val) => { if (!val) onClose() }}>
+      <DialogContent className="max-w-md border-white/[0.08] bg-card shadow-2xl p-6 space-y-4" showCloseButton={false}>
         <div className="flex items-center justify-between border-b border-white/[0.06] pb-4">
           <div className="flex items-center gap-2.5">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-red-500/20 bg-red-500/10">
@@ -492,8 +449,8 @@ function DisconnectConfirmModal({
             {isPending ? 'Disconnecting…' : 'Disconnect Repository'}
           </button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }
 

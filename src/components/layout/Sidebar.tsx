@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useParams } from 'next/navigation'
 import {
   BarChart3,
   LayoutDashboard,
@@ -36,33 +36,36 @@ interface NavSection {
   items: NavItem[]
 }
 
-const navSections: NavSection[] = [
-  {
-    items: [
-      { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, exact: true },
-    ],
-  },
-  {
-    title: 'Analytics',
-    items: [
-      { label: 'DORA Overview', href: '/dashboard', icon: BarChart3 },
-      { label: 'Contributors', href: '#', icon: Users },
-      { label: 'Deployments', href: '#', icon: Rocket },
-      { label: 'Pull Requests', href: '#', icon: GitPullRequest },
-    ],
-  },
-  {
-    title: 'Repositories',
-    items: [
-      { label: 'All Repositories', href: '#', icon: GitBranch },
-    ],
-  },
-]
-
 export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false)
   const pathname = usePathname()
+  const params = useParams()
+  const repoId = params?.repoId
   const { user, logout } = useAuthStore()
+
+  const navSections: NavSection[] = useMemo(() => {
+    const sections: NavSection[] = [
+      {
+        items: [
+          { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, exact: true },
+        ],
+      },
+    ]
+
+    if (repoId) {
+      sections.push({
+        title: 'Analytics',
+        items: [
+          { label: 'DORA Overview', href: `/repos/${repoId}`, icon: BarChart3, exact: true },
+          { label: 'Contributors', href: `/repos/${repoId}/contributors`, icon: Users },
+          { label: 'Deployments', href: `/repos/${repoId}/deployments`, icon: Rocket },
+          { label: 'Pull Requests', href: `/repos/${repoId}/prs`, icon: GitPullRequest },
+        ],
+      })
+    }
+
+    return sections
+  }, [repoId])
 
   // Close mobile sidebar on route change
   useEffect(() => {
