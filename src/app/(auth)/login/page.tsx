@@ -13,7 +13,6 @@ import { useAuthStore } from '@/store/authStore'
 
 const GITHUB_OAUTH_URL = `${process.env.NEXT_PUBLIC_API_URL}/auth/github`
 
-// ─── Error message map ────────────────────────────────────────────────────────
 const ERROR_MESSAGES: Record<string, string> = {
   oauth_failed: 'GitHub OAuth failed. Please try again.',
   invalid_token: 'Invalid authentication token received.',
@@ -26,7 +25,6 @@ function getErrorMessage(code: string | null): string | null {
   return ERROR_MESSAGES[code] ?? 'Something went wrong. Please try again.'
 }
 
-// ─── Inner component (needs useSearchParams, must be inside Suspense) ─────────
 function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -76,37 +74,39 @@ function LoginForm() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 py-12">
-      {/* Background */}
-      <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10">
-        <div className="absolute left-1/2 top-1/4 -translate-x-1/2 h-[400px] w-[700px] rounded-full bg-indigo-600/8 blur-3xl" />
-        <div className="absolute right-1/4 bottom-1/4 h-48 w-48 rounded-full bg-violet-600/8 blur-3xl" />
-      </div>
+    <div className="flex min-h-screen flex-col items-center justify-center px-4 py-12 relative overflow-hidden">
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="absolute inset-0 z-0 h-full w-full object-cover"
+      >
+        <source src="https://media.w3.org/2010/05/sintel/trailer.mp4" type="video/mp4" />
+      </video>
+      <div className="absolute inset-0 z-10 bg-black/80 pointer-events-none" />
 
-      {/* Brand */}
-      <Link href="/" className="mb-8 flex items-center gap-2.5 group">
+      <Link href="/" className="mb-8 flex items-center gap-2.5 group relative z-20">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/25">
           <BarChart3 className="h-4 w-4 text-white" />
         </div>
-        <span className="font-bold text-lg tracking-tight text-foreground">
+        <span className="font-bold text-lg tracking-tight text-white">
           Flow<span className="text-indigo-400">Metrics</span>
         </span>
       </Link>
 
-      {/* Card */}
       <Card
         id="login-card"
-        className="w-full max-w-sm border-border/50 bg-card/80 shadow-xl shadow-black/20 backdrop-blur-sm"
+        className="relative z-20 w-full max-w-sm border border-white/10 bg-white/5 shadow-2xl shadow-black/40 backdrop-blur-xl"
       >
         <CardHeader className="space-y-1 pb-4">
-          <CardTitle className="text-xl font-semibold tracking-tight">Welcome back</CardTitle>
-          <CardDescription className="text-muted-foreground text-sm">
+          <CardTitle className="text-xl font-semibold tracking-tight text-white">Welcome back</CardTitle>
+          <CardDescription className="text-slate-400 text-sm">
             Sign in to your FlowMetrics account
           </CardDescription>
         </CardHeader>
 
         <CardContent className="space-y-4">
-          {/* Error alert — reads from URL param or form error */}
           {activeError && (
             <Alert
               id="login-error-alert"
@@ -118,12 +118,11 @@ function LoginForm() {
             </Alert>
           )}
 
-          {/* GitHub OAuth button */}
           <Button
             id="github-oauth-button"
             type="button"
             variant="outline"
-            className="w-full gap-2 border-border/60 font-medium hover:bg-accent/60"
+            className="w-full gap-2 border-white/10 bg-transparent text-white hover:bg-white/10 hover:text-white font-medium"
             onClick={() => {
               window.location.href = GITHUB_OAUTH_URL
             }}
@@ -132,17 +131,15 @@ function LoginForm() {
             Continue with GitHub
           </Button>
 
-          {/* Divider */}
           <div className="relative flex items-center gap-3">
-            <div className="h-px flex-1 bg-border/60" />
-            <span className="text-[11px] font-medium text-muted-foreground/60">or sign in with email</span>
-            <div className="h-px flex-1 bg-border/60" />
+            <div className="h-px flex-1 bg-white/10" />
+            <span className="text-[11px] font-medium text-slate-400">or sign in with email</span>
+            <div className="h-px flex-1 bg-white/10" />
           </div>
 
-          {/* Email/password form */}
           <form id="login-form" onSubmit={handleSubmit} className="space-y-3">
             <div className="space-y-1.5">
-              <label htmlFor="login-email" className="text-xs font-medium text-muted-foreground">
+              <label htmlFor="login-email" className="text-xs font-medium text-slate-300">
                 Email address
               </label>
               <Input
@@ -154,12 +151,12 @@ function LoginForm() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={isLoading}
-                className="border-border/60 bg-background/50 text-sm"
+                className="border-white/10 bg-white/5 text-white placeholder:text-slate-500 text-sm"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor="login-password" className="text-xs font-medium text-muted-foreground">
+              <label htmlFor="login-password" className="text-xs font-medium text-slate-300">
                 Password
               </label>
               <div className="relative">
@@ -172,13 +169,13 @@ function LoginForm() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   disabled={isLoading}
-                  className="border-border/60 bg-background/50 pr-9 text-sm"
+                  className="border-white/10 bg-white/5 text-white placeholder:text-slate-500 pr-9 text-sm"
                 />
                 <button
                   type="button"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                   onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
                 >
                   {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                 </button>
@@ -188,7 +185,7 @@ function LoginForm() {
             <Button
               id="login-submit-button"
               type="submit"
-              className="w-full bg-indigo-600 font-semibold hover:bg-indigo-500"
+              className="w-full bg-indigo-600 text-white hover:bg-indigo-500 font-semibold"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -204,7 +201,7 @@ function LoginForm() {
         </CardContent>
 
         <CardFooter className="flex justify-center pt-0">
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-slate-400">
             Don&apos;t have an account?{' '}
             <Link
               href="/register"
@@ -219,12 +216,11 @@ function LoginForm() {
   )
 }
 
-// ─── Page export with Suspense boundary (required for useSearchParams) ────────
 export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="flex min-h-screen items-center justify-center bg-black">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-600/30 border-t-indigo-500" />
         </div>
       }

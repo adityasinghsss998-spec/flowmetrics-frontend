@@ -1,10 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import { useAuthStore } from '@/store/authStore'
 import Navbar from '@/components/layout/Navbar'
 import Sidebar from '@/components/layout/Sidebar'
+import { useSocket } from '@/hooks/useSocket'
 
 export default function DashboardLayout({
   children,
@@ -12,9 +13,13 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   const router = useRouter()
+  const params = useParams()
   const { isAuthenticated } = useAuthStore()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
+
+  const repoId = params?.repoId ? Number(params.repoId) : null
+  useSocket(repoId)
 
   useEffect(() => {
     setMounted(true)
