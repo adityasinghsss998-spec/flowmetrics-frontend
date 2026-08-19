@@ -16,7 +16,7 @@ import {
   Eye,
   Clock,
 } from 'lucide-react'
-import Navbar from '@/components/layout/Navbar'
+import HeroSection from '@/components/layout/HeroSection'
 
 const features = [
   {
@@ -178,197 +178,12 @@ const fadeUp = {
   }),
 }
 
-const metricCards = [
-  { label: 'Deploy Freq', value: '5.8/wk', color: 'border-indigo-500/20', icon: Zap },
-  { label: 'Lead Time', value: '18.5h', color: 'border-blue-500/20', icon: TrendingUp },
-  { label: 'CFR', value: '8%', color: 'border-amber-500/20', icon: Shield },
-  { label: 'MTTR', value: '2.5h', color: 'border-emerald-500/20', icon: Activity },
-]
-
 export default function LandingPage() {
   return (
-    <div className="relative min-h-screen flex-col text-white overflow-hidden">
-      <video
-        autoPlay
-        loop
-        muted
-        playsInline
-        className="fixed inset-0 z-0 h-full w-full object-cover"
-      >
-        <source src="https://media.w3.org/2010/05/sintel/trailer.mp4" type="video/mp4" />
-      </video>
-      <div className="fixed inset-0 z-10 bg-black/80 pointer-events-none" />
+    <div className="relative flex-col text-white bg-[#050510]">
+      <HeroSection />
 
       <div className="relative z-20 flex flex-col">
-        <Navbar variant="landing" />
-
-        <section
-          id="hero"
-          className="relative min-h-[90vh] flex items-center px-6 lg:px-12"
-        >
-          <div className="mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-12 py-20 lg:grid-cols-2 lg:gap-16">
-            <div className="flex flex-col">
-              <motion.div
-                variants={fadeUp}
-                initial="hidden"
-                animate="visible"
-                custom={0}
-                className="mb-6 inline-flex w-fit items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-4 py-1.5 text-xs font-semibold text-indigo-400"
-              >
-                <span className="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-pulse" />
-                Now in Beta — Free for Teams Under 10
-              </motion.div>
-
-              <motion.h1
-                variants={fadeUp}
-                initial="hidden"
-                animate="visible"
-                custom={1}
-                className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl xl:text-7xl text-white"
-              >
-                Engineering
-                <br />
-                Metrics{' '}
-                <span className="bg-gradient-to-r from-indigo-400 via-violet-400 to-cyan-400 bg-clip-text text-transparent">
-                  that Actually Matter
-                </span>
-              </motion.h1>
-
-              <motion.p
-                variants={fadeUp}
-                initial="hidden"
-                animate="visible"
-                custom={2}
-                className="mt-6 max-w-lg text-base text-slate-300 sm:text-lg leading-relaxed"
-              >
-                FlowMetrics connects to your GitHub repositories and delivers DORA metrics,
-                cycle time analysis, contributor insights, and real-time deployment events — all in
-                one beautiful dashboard.
-              </motion.p>
-
-              <motion.div
-                variants={fadeUp}
-                initial="hidden"
-                animate="visible"
-                custom={3}
-                className="mt-10 flex flex-wrap items-center gap-4"
-              >
-                <Link
-                  href="/register"
-                  className="group flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 transition-all hover:bg-indigo-500 hover:shadow-indigo-500/40 hover:-translate-y-px"
-                >
-                  Start for Free
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                </Link>
-                <Link
-                  href="/login"
-                  className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-6 py-3.5 text-sm font-semibold text-white backdrop-blur transition-all hover:bg-white/10 hover:border-white/20"
-                >
-                  <GitBranch className="h-4 w-4" />
-                  Continue with GitHub
-                </Link>
-              </motion.div>
-
-              <motion.div
-                variants={fadeUp}
-                initial="hidden"
-                animate="visible"
-                custom={4}
-                className="mt-10 flex items-center gap-6"
-              >
-                <div className="flex -space-x-2">
-                  {[
-                    'bg-indigo-600',
-                    'bg-violet-600',
-                    'bg-cyan-600',
-                    'bg-emerald-600',
-                  ].map((bg, i) => (
-                    <div
-                      key={i}
-                      className={`flex h-8 w-8 items-center justify-center rounded-full border-2 border-black ${bg}`}
-                    >
-                      <span className="text-[10px] font-bold text-white">
-                        {String.fromCharCode(65 + i)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-white">1,200+ teams</p>
-                  <p className="text-xs text-slate-400">already shipping faster</p>
-                </div>
-              </motion.div>
-            </div>
-
-            <motion.div
-              variants={fadeUp}
-              initial="hidden"
-              animate="visible"
-              custom={3}
-              className="relative hidden lg:block"
-            >
-              <div className="relative rounded-2xl border border-white/10 bg-black/40 p-6 backdrop-blur-md shadow-2xl shadow-indigo-500/10">
-                <div className="relative grid grid-cols-2 gap-3">
-                  {metricCards.map((card, i) => {
-                    const Icon = card.icon
-                    return (
-                      <motion.div
-                        key={card.label}
-                        className={`flex flex-col gap-2 rounded-xl border ${card.color} bg-white/5 p-4 backdrop-blur-sm`}
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.5 + i * 0.1, duration: 0.4 }}
-                        whileHover={{ scale: 1.03, y: -2 }}
-                      >
-                        <div className="flex items-center gap-2">
-                          <Icon className="h-3.5 w-3.5 text-slate-400" />
-                          <span className="text-[11px] font-medium text-slate-400">
-                            {card.label}
-                          </span>
-                        </div>
-                        <span className="text-2xl font-bold tracking-tight text-white">
-                          {card.value}
-                        </span>
-                      </motion.div>
-                    )
-                  })}
-                </div>
-
-                <div className="mt-4 rounded-xl border border-white/10 bg-white/5 p-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Eye className="h-3 w-3 text-slate-400" />
-                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-                      Live Activity
-                    </span>
-                    <span className="ml-auto flex items-center gap-1">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                      <span className="text-[10px] text-emerald-400 font-medium">Connected</span>
-                    </span>
-                  </div>
-                  <div className="space-y-1">
-                    {[
-                      { event: 'pr:merged', user: 'aditya', time: '2m ago', dot: 'bg-blue-500' },
-                      { event: 'deployment:completed', user: 'ci-bot', time: '5m ago', dot: 'bg-emerald-500' },
-                      { event: 'anomaly:detected', user: 'system', time: '12m ago', dot: 'bg-amber-500' },
-                    ].map((item) => (
-                      <div
-                        key={item.event}
-                        className="flex items-center gap-2 rounded-md bg-white/5 px-2 py-1"
-                      >
-                        <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${item.dot}`} />
-                        <span className="font-mono text-[10px] text-slate-300 flex-1 truncate">
-                          {item.event}
-                        </span>
-                        <span className="text-[10px] text-slate-500">{item.time}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </section>
-
         <section
           id="stats"
           className="border-y border-white/10 bg-black/40 py-10 backdrop-blur-md"
@@ -572,7 +387,7 @@ export default function LandingPage() {
                 Flow<span className="text-indigo-400">Metrics</span>
               </span>
             </div>
-            <p>Built with Next.js 14 · TypeScript · shadcn/ui · React Query · Socket.io</p>
+            <p>Built with Next.js · TypeScript · shadcn/ui · React Query · Socket.io</p>
             <p>© 2026 FlowMetrics. All rights reserved.</p>
           </div>
         </footer>

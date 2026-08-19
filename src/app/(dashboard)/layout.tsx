@@ -6,6 +6,7 @@ import { useAuthStore } from '@/store/authStore'
 import Navbar from '@/components/layout/Navbar'
 import Sidebar from '@/components/layout/Sidebar'
 import { useSocket } from '@/hooks/useSocket'
+import { OrgRoleProvider } from '@/hooks/useOrgRole'
 
 export default function DashboardLayout({
   children,
@@ -39,25 +40,27 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      <Sidebar
-        mobileOpen={mobileOpen}
-        onMobileClose={() => setMobileOpen(false)}
-      />
-
-      <div className="flex flex-1 flex-col overflow-hidden min-w-0">
-        <Navbar
-          variant="dashboard"
-          onMenuClick={() => setMobileOpen(true)}
+    <OrgRoleProvider>
+      <div className="flex h-screen overflow-hidden bg-background">
+        <Sidebar
+          mobileOpen={mobileOpen}
+          onMobileClose={() => setMobileOpen(false)}
         />
 
-        <main
-          id="dashboard-main"
-          className="flex-1 overflow-y-auto p-4 lg:p-6"
-        >
-          {children}
-        </main>
+        <div className="flex flex-1 flex-col overflow-hidden min-w-0">
+          <Navbar
+            variant="dashboard"
+            onMenuClick={() => setMobileOpen(true)}
+          />
+
+          <main
+            id="dashboard-main"
+            className="flex-1 overflow-y-auto p-4 lg:p-6"
+          >
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
+    </OrgRoleProvider>
   )
 }

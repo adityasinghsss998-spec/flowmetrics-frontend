@@ -3,6 +3,23 @@ import { useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuthStore } from '@/store/authStore'
 
+function parseJwt(token: string) {
+  try {
+    const base64Url = token.split('.')[1]
+    if (!base64Url) return null
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    )
+    return JSON.parse(jsonPayload)
+  } catch {
+    return null
+  }
+}
+
 function CallbackContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -17,27 +34,20 @@ function CallbackContent() {
       return
     }
 
-    try {
-    
-      const base64Url = accessToken.split('.')[1]
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
-      const payload = JSON.parse(atob(base64))
-      
-      
-      localStorage.setItem('accessToken', accessToken)
-      localStorage.setItem('refreshToken', refreshToken)
-      
-      setTokens({ accessToken, refreshToken, user: payload })
-      router.replace('/dashboard')
-    } catch {
-    
+    const payload = parseJwt(accessToken)
+    if (!payload) {
       localStorage.removeItem('accessToken')
       localStorage.removeItem('refreshToken')
       router.replace('/login?error=invalid_token')
+      return
     }
 
+    localStorage.setItem('accessToken', accessToken)
+    localStorage.setItem('refreshToken', refreshToken)
 
-  }, [])
+    setTokens({ accessToken, refreshToken, user: payload })
+    router.replace('/dashboard')
+  }, [searchParams, router, setTokens])
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">

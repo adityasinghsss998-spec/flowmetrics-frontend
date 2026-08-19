@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
-import { usePathname, useParams } from 'next/navigation'
+import { usePathname, useParams, useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import {
   BarChart3,
@@ -56,6 +56,7 @@ interface OrgWithMembers extends Organization {
 }
 
 export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
+  const router = useRouter()
   const [collapsed, setCollapsed] = useState(false)
   const pathname = usePathname()
   const params = useParams()
@@ -89,6 +90,7 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
       {
         items: [
           { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, exact: true },
+          { label: 'Settings', href: '/settings', icon: Settings },
         ],
       },
     ]
@@ -310,7 +312,7 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
               <UserCircle className="mr-2 h-4 w-4" />
               <span>Profile</span>
             </DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer">
+            <DropdownMenuItem onClick={() => router.push('/settings')} className="cursor-pointer">
               <Settings className="mr-2 h-4 w-4" />
               <span>Settings</span>
             </DropdownMenuItem>

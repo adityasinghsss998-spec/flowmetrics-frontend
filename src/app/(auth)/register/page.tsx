@@ -46,7 +46,10 @@ function RegisterForm() {
     try {
       await api.post('/auth/register', { name, email, password })
       setSuccess(true)
-      setTimeout(() => router.replace('/login'), 2000)
+      const redirectTarget = searchParams.get('redirect')
+      setTimeout(() => {
+        router.replace(redirectTarget ? `/login?redirect=${encodeURIComponent(redirectTarget)}` : '/login')
+      }, 1500)
     } catch (err: unknown) {
       const msg =
         err &&
@@ -237,7 +240,11 @@ function RegisterForm() {
           <p className="text-xs text-slate-400">
             Already have an account?{' '}
             <Link
-              href="/login"
+              href={
+                searchParams.get('redirect')
+                  ? `/login?redirect=${encodeURIComponent(searchParams.get('redirect')!)}`
+                  : '/login'
+              }
               className="font-semibold text-indigo-400 hover:text-indigo-300 transition-colors"
             >
               Sign in

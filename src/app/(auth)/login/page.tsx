@@ -53,7 +53,8 @@ function LoginForm() {
       localStorage.setItem('refreshToken', refreshToken)
       setTokens({ accessToken, refreshToken, user })
 
-      router.replace('/dashboard')
+      const redirectTarget = searchParams.get('redirect') || '/dashboard'
+      router.replace(redirectTarget)
     } catch (err: unknown) {
       const msg =
         err &&
@@ -204,7 +205,11 @@ function LoginForm() {
           <p className="text-xs text-slate-400">
             Don&apos;t have an account?{' '}
             <Link
-              href="/register"
+              href={
+                searchParams.get('redirect')
+                  ? `/register?redirect=${encodeURIComponent(searchParams.get('redirect')!)}`
+                  : '/register'
+              }
               className="font-semibold text-indigo-400 hover:text-indigo-300 transition-colors"
             >
               Create one
