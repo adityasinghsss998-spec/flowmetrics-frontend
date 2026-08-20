@@ -64,7 +64,7 @@ function CustomLegend({ payload }: { payload?: { color: string; value: string }[
   )
 }
 
-function SummaryCard({ label, value, unit, icon: Icon, color }: { label: string; value: number | null; unit: string; icon: React.ElementType; color: string }) {
+function SummaryCard({ label, value, unit, icon: Icon, color }: { label: string; value: number | null; unit: string; icon: React.ComponentType<{ className?: string }>; color: string }) {
   return (
     <div className={cn('flex items-center gap-2.5 rounded-xl border px-3 py-2.5', color)}>
       <Icon className="h-3.5 w-3.5 shrink-0 opacity-70" />

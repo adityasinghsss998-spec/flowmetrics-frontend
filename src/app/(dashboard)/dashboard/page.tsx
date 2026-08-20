@@ -25,6 +25,7 @@ import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { useGithubConnect } from '@/hooks/useGithubConnect'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
+import { useOrgRole } from '@/hooks/useOrgRole'
 
 interface AvailableRepo {
   github_repo_id: number
@@ -261,6 +262,7 @@ function ConnectModal({
   onConnect,
   error,
   isGithubConnected,
+  isRepoError,
   onConnectGithub,
 }: {
   open: boolean
@@ -276,8 +278,11 @@ function ConnectModal({
   onConnect: (fullName: string) => void
   error: string | null
   isGithubConnected: boolean
+  isRepoError: boolean
   onConnectGithub: () => void
 }) {
+  const showGithubConnect = !isGithubConnected || isRepoError
+
   return (
     <Dialog open={open} onOpenChange={(val) => { if (!val) onClose() }}>
       <DialogContent className="sm:max-w-3xl w-[95vw] border-white/[0.08] bg-card p-0 shadow-2xl overflow-hidden" showCloseButton={false}>
@@ -298,7 +303,7 @@ function ConnectModal({
         </div>
 
         <div className="p-5 space-y-4">
-          {!isGithubConnected ? (
+          {showGithubConnect ? (
             <div className="flex flex-col items-center justify-center rounded-xl border border-indigo-500/20 bg-indigo-500/10 p-6 text-center space-y-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-indigo-500/20 bg-indigo-500/20 text-indigo-400">
                 <GitBranch className="h-5 w-5" />
@@ -463,6 +468,55 @@ function RepoCard({
   onClick: () => void
   onDisconnect?: () => void
 }) {
+  const recentDeployQuery = useQuery({
+    queryKey: ['recent-deployments', repo.id],
+    queryFn: () => api.get(`/analytics/deployments/recent?repoId=${repo.id}&limit=1`).then(r => r.data.data),
+    staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
+  })
+
+  const lastDeploy = recentDeployQuery.data?.[0]
+  
+  const getDeployStatusDisplay = () => {
+    if (recentDeployQuery.isLoading) {
+      return (
+        <div className="flex items-center gap-1.5">
+          <div className="h-1.5 w-1.5 rounded-full bg-slate-600 animate-pulse" />
+          <span className="text-[11px] font-medium text-muted-foreground/40">Loading deployments...</span>
+        </div>
+      )
+    }
+    
+    if (!lastDeploy) {
+      return (
+        <div className="flex items-center gap-1.5">
+          <div className="h-1.5 w-1.5 rounded-full bg-slate-600" />
+          <span className="text-[11px] font-medium text-muted-foreground/40">No deployments recorded</span>
+        </div>
+      )
+    }
+
+    const diff = Date.now() - new Date(lastDeploy.deployed_at).getTime()
+    const hours = Math.max(1, Math.floor(diff / (1000 * 60 * 60)))
+    const timeAgo = `${hours} hour${hours === 1 ? '' : 's'} ago`
+
+    if (lastDeploy.status === 'success') {
+      return (
+        <div className="flex items-center gap-1.5">
+          <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50" />
+          <span className="text-[11px] font-medium text-emerald-500/80">Last deploy: {timeAgo}</span>
+        </div>
+      )
+    }
+
+    return (
+      <div className="flex items-center gap-1.5">
+        <div className="h-1.5 w-1.5 rounded-full bg-red-500 shadow-sm shadow-red-500/50" />
+        <span className="text-[11px] font-medium text-red-500/80">Last deploy failed: {timeAgo}</span>
+      </div>
+    )
+  }
+
   return (
     <div
       role="button"
@@ -496,26 +550,31 @@ function RepoCard({
             </div>
           </div>
           <div className="flex items-center gap-1">
-            <button
-              id={`disconnect-repo-${repo.id}`}
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation()
-                onDisconnect?.()
-              }}
-              title="Disconnect repository"
-              className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground/40 hover:bg-red-500/10 hover:text-red-400 transition-colors"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </button>
+            {onDisconnect && (
+              <button
+                id={`disconnect-repo-${repo.id}`}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onDisconnect()
+                }}
+                title="Disconnect repository"
+                className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground/40 hover:bg-red-500/10 hover:text-red-400 transition-colors"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            )}
             <ExternalLink className="h-3.5 w-3.5 text-muted-foreground/30 shrink-0 opacity-0 group-hover:opacity-100 transition-all duration-200 group-hover:text-indigo-400" />
           </div>
         </div>
 
         <div className="space-y-2.5 mt-4 pt-3 border-t border-white/[0.04]">
-          <div className="flex items-center gap-2">
-            <GitBranch className="h-3 w-3 text-muted-foreground/40 shrink-0" />
-            <span className="text-[11px] text-muted-foreground/60 font-mono">{repo.default_branch}</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <GitBranch className="h-3 w-3 text-muted-foreground/40 shrink-0" />
+              <span className="text-[11px] text-muted-foreground/60 font-mono">{repo.default_branch}</span>
+            </div>
+            {getDeployStatusDisplay()}
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
@@ -544,6 +603,7 @@ export default function DashboardPage() {
   const router = useRouter()
   const qc = useQueryClient()
   const { isGithubConnected, connectGithub } = useGithubConnect()
+  const { canConnectRepo, canDeleteRepo } = useOrgRole()
   const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null)
   const [connectOpen, setConnectOpen] = useState(false)
   const [createOrgOpen, setCreateOrgOpen] = useState(false)
@@ -552,19 +612,34 @@ export default function DashboardPage() {
 
   const orgsQuery = useQuery<OrgWithMembers[]>({
     queryKey: ['orgs'],
-    queryFn: () =>
-      api.get('/orgs').then((r) => r.data.data).catch(() => api.get('/organizations').then((r) => r.data.data)),
+    queryFn: async () => {
+      try {
+        const res = await api.get('/orgs')
+        return res.data.data
+      } catch {
+        const fallback = await api.get('/organizations')
+        return fallback.data.data
+      }
+    },
     staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
   })
 
   const orgs = orgsQuery.data ?? []
-  const activeOrgId = selectedOrgId ?? (orgs[0]?.id ? String(orgs[0].id) : null)
-  const activeOrg = orgs.find((o) => String(o.id) === activeOrgId)
+  const activeOrg = orgs.find((o) => String(o.id) === selectedOrgId) ?? orgs[0] ?? null
+  const activeOrgId = activeOrg ? String(activeOrg.id) : null
 
   const reposQuery = useQuery<Repository[]>({
     queryKey: ['repos', activeOrgId],
-    queryFn: () => api.get(`/repos/org/${activeOrgId}`).then((r) => r.data.data),
+    queryFn: async () => {
+      if (!activeOrgId) return []
+      try {
+        const res = await api.get(`/repos/org/${activeOrgId}`)
+        return res.data.data
+      } catch (err) {
+        throw err
+      }
+    },
     enabled: !!activeOrgId,
     staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
@@ -572,15 +647,28 @@ export default function DashboardPage() {
 
   const availableReposQuery = useQuery<AvailableRepo[]>({
     queryKey: ['available-repos'],
-    queryFn: () => api.get('/repos/available').then((r) => r.data.data),
+    queryFn: async () => {
+      try {
+        const res = await api.get('/repos/available')
+        return res.data.data
+      } catch (err) {
+        throw err
+      }
+    },
     enabled: connectOpen && !!activeOrgId && isGithubConnected,
     staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
+    retry: false,
   })
 
   const connectMutation = useMutation({
-    mutationFn: (payload: { orgId: number; fullName: string }) =>
-      api.post('/repos/connect', payload),
+    mutationFn: async (payload: { orgId: number; fullName: string }) => {
+      try {
+        return await api.post('/repos/connect', payload)
+      } catch (err) {
+        throw err
+      }
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['repos', activeOrgId] })
       setConnectOpen(false)
@@ -589,8 +677,13 @@ export default function DashboardPage() {
   })
 
   const disconnectMutation = useMutation({
-    mutationFn: (repoId: number) =>
-      api.delete(`/repos/${repoId}?orgId=${activeOrgId}`),
+    mutationFn: async (repoId: number) => {
+      try {
+        return await api.delete(`/repos/${repoId}?orgId=${activeOrgId}`)
+      } catch (err) {
+        throw err
+      }
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['repos', activeOrgId] })
       qc.invalidateQueries({ queryKey: ['available-repos'] })
@@ -655,6 +748,7 @@ export default function DashboardPage() {
         onConnect={handleConnect}
         error={connectError}
         isGithubConnected={isGithubConnected}
+        isRepoError={availableReposQuery.isError}
         onConnectGithub={connectGithub}
       />
 
@@ -672,20 +766,22 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        <Button
-          id="connect-repo-btn"
-          type="button"
-          onClick={() => setConnectOpen(true)}
-          className={cn(
-            'flex items-center gap-2 rounded-xl px-4',
-            'bg-indigo-600 text-white hover:bg-indigo-500',
-            'shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/30',
-            'transition-all duration-200',
-          )}
-        >
-          <Plus className="h-4 w-4" />
-          Connect Repository
-        </Button>
+        {canConnectRepo && (
+          <Button
+            id="connect-repo-btn"
+            type="button"
+            onClick={() => setConnectOpen(true)}
+            className={cn(
+              'flex items-center gap-2 rounded-xl px-4',
+              'bg-indigo-600 text-white hover:bg-indigo-500',
+              'shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/30',
+              'transition-all duration-200',
+            )}
+          >
+            <Plus className="h-4 w-4" />
+            Connect Repository
+          </Button>
+        )}
       </div>
 
       <div className="flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-2.5 w-fit">
@@ -722,19 +818,31 @@ export default function DashboardPage() {
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/[0.06] bg-white/[0.02] mb-4">
             <GitBranch className="h-6 w-6 text-muted-foreground/30" />
           </div>
-          <p className="text-base font-semibold text-muted-foreground">No repositories connected</p>
-          <p className="text-sm text-muted-foreground/50 mt-1 mb-5">
-            Connect a GitHub repository to start tracking DORA metrics.
-          </p>
-          <Button
-            type="button"
-            onClick={() => setConnectOpen(true)}
-            className="bg-indigo-600 text-white hover:bg-indigo-500 shadow-lg shadow-indigo-500/20 rounded-xl"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Connect Repository
-            <ChevronRight className="h-4 w-4 ml-1" />
-          </Button>
+          {canConnectRepo ? (
+            <>
+              <p className="text-base font-semibold text-muted-foreground">No repositories connected</p>
+              <p className="text-sm text-muted-foreground/50 mt-1 mb-5">
+                Connect a GitHub repository to start tracking DORA metrics.
+              </p>
+              <Button
+                id="empty-connect-repo-btn"
+                type="button"
+                onClick={() => setConnectOpen(true)}
+                className="bg-indigo-600 text-white hover:bg-indigo-500 shadow-lg shadow-indigo-500/20 rounded-xl"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Connect Repository
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </>
+          ) : (
+            <>
+              <p className="text-base font-semibold text-muted-foreground">No repositories connected yet</p>
+              <p className="text-sm text-muted-foreground/50 mt-1 max-w-sm">
+                Ask your org owner to connect a GitHub repository.
+              </p>
+            </>
+          )}
         </div>
       )}
 
@@ -772,7 +880,7 @@ export default function DashboardPage() {
                 key={repo.id}
                 repo={repo}
                 onClick={() => router.push(`/repos/${repo.id}`)}
-                onDisconnect={() => setRepoToDisconnect(repo)}
+                onDisconnect={canDeleteRepo ? () => setRepoToDisconnect(repo) : undefined}
               />
             ))}
           </div>

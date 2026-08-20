@@ -138,17 +138,17 @@ export default function RecentDeployments({ data, isLoading }: RecentDeployments
                       <TableCell className="py-2.5 hidden md:table-cell">
                         <span className="text-xs text-muted-foreground tabular-nums">
                           {dep.build_duration_minutes != null
-                            ? `${dep.build_duration_minutes.toFixed(1)}m`
+                            ? `${Number(dep.build_duration_minutes).toFixed(1)}m`
                             : '—'}
                         </span>
                       </TableCell>
                       <TableCell className="py-2.5 text-right pr-4">
                         <span className="text-xs text-muted-foreground tabular-nums">
-                          {dep.hours_ago < 1
-                            ? `${Math.round(dep.hours_ago * 60)}m ago`
-                            : dep.hours_ago < 24
-                            ? `${dep.hours_ago.toFixed(0)}h ago`
-                            : `${Math.floor(dep.hours_ago / 24)}d ago`}
+                          {Number(dep.hours_ago) < 1
+                            ? `${Math.round(Number(dep.hours_ago) * 60)}m ago`
+                            : Number(dep.hours_ago) < 24
+                            ? `${Number(dep.hours_ago).toFixed(0)}h ago`
+                            : `${Math.floor(Number(dep.hours_ago) / 24)}d ago`}
                         </span>
                       </TableCell>
                     </TableRow>

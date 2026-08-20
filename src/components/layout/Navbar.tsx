@@ -3,8 +3,17 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Menu, X, BarChart3, Zap, ChevronRight } from 'lucide-react'
+import { Menu, X, BarChart3, ChevronRight, LogOut, Settings, UserCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import RealtimeBadge from '@/components/layout/RealtimeBadge'
+import { useAuthStore } from '@/store/authStore'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 interface NavbarProps {
   variant?: 'landing' | 'dashboard'
@@ -20,6 +29,7 @@ const links = [
 export default function Navbar({ variant = 'landing', onMenuClick }: NavbarProps) {
   const [open, setOpen] = useState(false)
   const path = usePathname()
+  const { user, logout } = useAuthStore()
 
   const toggle = () => setOpen((p) => !p)
 
@@ -50,14 +60,38 @@ export default function Navbar({ variant = 'landing', onMenuClick }: NavbarProps
         </div>
 
         <div className="flex items-center gap-3">
-          <div
-            id="realtime-badge-slot"
-            className="hidden sm:block"
-            aria-label="Realtime status placeholder"
-          />
-          <div className="flex h-8 w-8 items-center justify-center rounded-full border border-indigo-500/30 bg-indigo-600/20">
-            <span className="text-xs font-semibold text-indigo-400">U</span>
+          <div className="hidden sm:block">
+            <RealtimeBadge />
           </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger className="flex h-8 w-8 items-center justify-center rounded-full border border-indigo-500/30 bg-indigo-600/20 focus:outline-none transition-colors hover:bg-indigo-600/30">
+              <span className="text-xs font-semibold text-indigo-400">
+                {user?.name?.[0]?.toUpperCase() ?? 'U'}
+              </span>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 bg-background/95 backdrop-blur border-border/50 mt-2">
+              <div className="px-2 py-1.5 text-sm font-normal">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none">{user?.name ?? 'User'}</p>
+                  <p className="text-xs leading-none text-muted-foreground">{user?.email ?? ''}</p>
+                </div>
+              </div>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="cursor-pointer">
+                <UserCircle className="mr-2 h-4 w-4" />
+                <span>Profile</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer">
+                <Settings className="mr-2 h-4 w-4" />
+                <span>Settings</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={logout} className="text-red-400 focus:text-red-400 focus:bg-red-400/10 cursor-pointer">
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Log out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
     )

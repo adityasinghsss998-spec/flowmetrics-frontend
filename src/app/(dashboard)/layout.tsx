@@ -1,10 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import { useAuthStore } from '@/store/authStore'
 import Navbar from '@/components/layout/Navbar'
 import Sidebar from '@/components/layout/Sidebar'
+import { useSocket } from '@/hooks/useSocket'
+import { OrgRoleProvider } from '@/hooks/useOrgRole'
 
 export default function DashboardLayout({
   children,
@@ -12,9 +14,13 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   const router = useRouter()
+  const params = useParams()
   const { isAuthenticated } = useAuthStore()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
+
+  const repoId = params?.repoId ? Number(params.repoId) : null
+  useSocket(repoId)
 
   useEffect(() => {
     setMounted(true)
@@ -34,25 +40,27 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      <Sidebar
-        mobileOpen={mobileOpen}
-        onMobileClose={() => setMobileOpen(false)}
-      />
-
-      <div className="flex flex-1 flex-col overflow-hidden min-w-0">
-        <Navbar
-          variant="dashboard"
-          onMenuClick={() => setMobileOpen(true)}
+    <OrgRoleProvider>
+      <div className="flex h-screen overflow-hidden bg-background">
+        <Sidebar
+          mobileOpen={mobileOpen}
+          onMobileClose={() => setMobileOpen(false)}
         />
 
-        <main
-          id="dashboard-main"
-          className="flex-1 overflow-y-auto p-4 lg:p-6"
-        >
-          {children}
-        </main>
+        <div className="flex flex-1 flex-col overflow-hidden min-w-0">
+          <Navbar
+            variant="dashboard"
+            onMenuClick={() => setMobileOpen(true)}
+          />
+
+          <main
+            id="dashboard-main"
+            className="flex-1 overflow-y-auto p-4 lg:p-6"
+          >
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
+    </OrgRoleProvider>
   )
 }
