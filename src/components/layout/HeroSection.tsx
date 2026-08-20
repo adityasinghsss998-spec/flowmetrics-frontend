@@ -2,207 +2,179 @@
 
 import { useRef } from 'react'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
-import {
-  ArrowRight,
-  GitBranch,
-  BarChart3,
-} from 'lucide-react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { useGSAP } from '@gsap/react'
 import { ScrollProgressProvider, useScrollProgress } from '@/context/ScrollProgressContext'
 import HeroCanvas from '@/components/three/HeroCanvas'
-import Navbar from '@/components/layout/Navbar'
+import FlowMetricsLogo from '@/components/ui/FlowMetricsLogo'
 
 gsap.registerPlugin(ScrollTrigger, useGSAP)
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 24 },
-  visible: (i: number = 0) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: i * 0.1, duration: 0.5, ease: 'easeOut' as const },
-  }),
-}
-
-const AVATAR_COLORS = ['bg-indigo-600', 'bg-violet-600', 'bg-cyan-600', 'bg-emerald-600']
-
 function ScrollDriver() {
   const pinRef = useRef<HTMLDivElement>(null)
-  const ctaOverlayRef = useRef<HTMLDivElement>(null)
+  const leftRef = useRef<HTMLDivElement>(null)
+  const rightRef = useRef<HTMLDivElement>(null)
+  const ctaRef = useRef<HTMLDivElement>(null)
+  const scrollHintRef = useRef<HTMLDivElement>(null)
   const progress = useScrollProgress()
 
-  useGSAP(
-    () => {
-      const el = pinRef.current
-      if (!el) return
-
-      const proxy = { value: 0 }
-
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: el,
-          start: 'top top',
-          end: '+=200vh',
-          scrub: 1.5,
-          pin: true,
-          pinSpacing: true,
-          anticipatePin: 1,
-        },
-      })
-
-      tl.to(
-        proxy,
-        {
-          value: 1,
-          ease: 'none',
-          onUpdate() {
-            progress.current = proxy.value
-          },
-        },
-        0
-      )
-
-      if (ctaOverlayRef.current) {
-        tl.fromTo(
-          ctaOverlayRef.current,
-          { autoAlpha: 0, y: 16 },
-          { autoAlpha: 1, y: 0, ease: 'power2.out', duration: 0.3 },
-          0.7
-        )
-      }
-    },
-    { scope: pinRef }
-  )
+  useGSAP(() => {
+    const el = pinRef.current
+    if (!el) return
+    const proxy = { value: 0 }
+    const tl = gsap.timeline({
+      scrollTrigger: {
+        trigger: el,
+        start: 'top top',
+        end: '+=200vh',
+        scrub: 1.5,
+        pin: true,
+        pinSpacing: true,
+        anticipatePin: 1,
+      },
+    })
+    tl.to(proxy, { value: 1, ease: 'none', onUpdate() { progress.current = proxy.value } }, 0)
+    if (leftRef.current) {
+      tl.fromTo(leftRef.current.querySelectorAll('.spec-item'),
+        { autoAlpha: 0, x: -28 },
+        { autoAlpha: 1, x: 0, stagger: 0.14, ease: 'power2.out', duration: 0.45 }, 0.22)
+    }
+    if (rightRef.current) {
+      tl.fromTo(rightRef.current.querySelectorAll('.spec-item'),
+        { autoAlpha: 0, x: 28 },
+        { autoAlpha: 1, x: 0, stagger: 0.14, ease: 'power2.out', duration: 0.45 }, 0.42)
+    }
+    if (ctaRef.current) {
+      tl.fromTo(ctaRef.current,
+        { autoAlpha: 0, y: 12 },
+        { autoAlpha: 1, y: 0, ease: 'power2.out', duration: 0.35 }, 0.72)
+    }
+    if (scrollHintRef.current) {
+      tl.to(scrollHintRef.current, { autoAlpha: 0, duration: 0.2 }, 0.05)
+    }
+  }, { scope: pinRef })
 
   return (
     <div ref={pinRef} className="relative w-full h-screen overflow-hidden bg-[#050510]">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(99,102,241,0.15),transparent)]" />
 
-      <div className="relative z-20 flex flex-col h-full">
-        <Navbar variant="landing" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_90%_60%_at_55%_40%,rgba(99,102,241,0.1),transparent)] pointer-events-none" />
 
-        <div className="flex-1 mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-12 px-6 lg:grid-cols-2 lg:gap-16 lg:px-12">
-          <div className="flex flex-col">
-            <motion.div
-              variants={fadeUp}
-              initial="hidden"
-              animate="visible"
-              custom={0}
-              className="mb-6 inline-flex w-fit items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-4 py-1.5 text-xs font-semibold text-indigo-400"
+      {/* Macro background type */}
+      <div className="absolute top-0 left-0 z-0 pointer-events-none select-none overflow-hidden">
+        <p className="font-black leading-[0.82] tracking-tighter whitespace-nowrap"
+          style={{ fontSize: 'clamp(10rem, 28vw, 30rem)', color: 'rgba(255,255,255,0.028)' }}>
+          FLOW
+        </p>
+      </div>
+      <div className="absolute bottom-0 right-0 z-0 pointer-events-none select-none overflow-hidden">
+        <p className="font-black leading-[0.82] tracking-tighter whitespace-nowrap"
+          style={{ fontSize: 'clamp(6rem, 15vw, 18rem)', color: 'rgba(255,255,255,0.022)' }}>
+          METRICS
+        </p>
+      </div>
+
+      {/* Nav — bigger, more visible */}
+      <nav className="absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-8 py-5">
+        <Link href="/">
+          <FlowMetricsLogo size="sm" />
+        </Link>
+        <div className="hidden md:flex items-center gap-8 bg-white/5 backdrop-blur-md border border-white/10 rounded-full px-6 py-2.5">
+          {['Features', 'How It Works', 'Pricing'].map(label => (
+            <Link
+              key={label}
+              href={`#${label.toLowerCase().replace(/\s+/g, '-')}`}
+              className="text-sm font-medium text-white/60 hover:text-white transition-colors"
             >
-              <span className="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-pulse" />
-              Now in Beta — Free for Teams Under 10
-            </motion.div>
-
-            <motion.h1
-              variants={fadeUp}
-              initial="hidden"
-              animate="visible"
-              custom={1}
-              className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl xl:text-7xl text-white"
-            >
-              Engineering
-              <br />
-              Metrics{' '}
-              <span className="bg-gradient-to-r from-indigo-400 via-violet-400 to-cyan-400 bg-clip-text text-transparent">
-                that Actually Matter
-              </span>
-            </motion.h1>
-
-            <motion.p
-              variants={fadeUp}
-              initial="hidden"
-              animate="visible"
-              custom={2}
-              className="mt-6 max-w-lg text-base text-slate-300 sm:text-lg leading-relaxed"
-            >
-              FlowMetrics connects to your GitHub repositories and delivers DORA metrics,
-              cycle time analysis, contributor insights, and real-time deployment events — all in
-              one beautiful dashboard.
-            </motion.p>
-
-            <motion.div
-              variants={fadeUp}
-              initial="hidden"
-              animate="visible"
-              custom={3}
-              className="mt-10 flex flex-wrap items-center gap-4"
-            >
-              <Link
-                href="/register"
-                className="group flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 transition-all hover:bg-indigo-500 hover:shadow-indigo-500/40 hover:-translate-y-px"
-              >
-                Start for Free
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-              </Link>
-              <Link
-                href="/login"
-                className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-6 py-3.5 text-sm font-semibold text-white backdrop-blur transition-all hover:bg-white/10 hover:border-white/20"
-              >
-                <GitBranch className="h-4 w-4" />
-                Continue with GitHub
-              </Link>
-            </motion.div>
-
-            <motion.div
-              variants={fadeUp}
-              initial="hidden"
-              animate="visible"
-              custom={4}
-              className="mt-10 flex items-center gap-6"
-            >
-              <div className="flex -space-x-2">
-                {AVATAR_COLORS.map((bg, i) => (
-                  <div
-                    key={i}
-                    className={`flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#050510] ${bg}`}
-                  >
-                    <span className="text-[10px] font-bold text-white">
-                      {String.fromCharCode(65 + i)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-white">1,200+ teams</p>
-                <p className="text-xs text-slate-400">already shipping faster</p>
-              </div>
-            </motion.div>
-          </div>
-
-          <motion.div
-            variants={fadeUp}
-            initial="hidden"
-            animate="visible"
-            custom={3}
-            className="relative hidden lg:flex items-center justify-center"
-            style={{ height: '480px' }}
-          >
-            <div className="absolute inset-0 rounded-2xl overflow-hidden">
-              <HeroCanvas />
-            </div>
-
-            <div
-              ref={ctaOverlayRef}
-              className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 opacity-0 invisible"
-            >
-              <Link
-                href="/register"
-                className="flex items-center gap-2 rounded-full border border-indigo-500/40 bg-indigo-600/80 backdrop-blur px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:bg-indigo-500"
-              >
-                Enter Dashboard <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-          </motion.div>
+              {label}
+            </Link>
+          ))}
+          <Link href="/login" className="text-sm font-medium text-white/60 hover:text-white transition-colors">
+            Login
+          </Link>
         </div>
+        <Link
+          href="/register"
+          className="group relative flex items-center gap-2 rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 transition-all hover:-translate-y-px"
+        >
+          Get Started
+          <span className="transition-transform group-hover:translate-x-0.5 inline-block">→</span>
+        </Link>
+      </nav>
 
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-50">
-          <span className="text-[10px] uppercase tracking-widest text-slate-500">Scroll</span>
-          <div className="h-8 w-px bg-gradient-to-b from-slate-500 to-transparent animate-pulse" />
+      {/* Metadata */}
+      <div className="absolute top-20 left-8 z-30">
+        <p className="text-[9px] font-mono uppercase tracking-[0.28em] text-white/25">Engineering Platform</p>
+        <p className="text-[9px] font-mono uppercase tracking-[0.28em] text-white/25 mt-0.5">Release 2026</p>
+      </div>
+
+      {/* 3D Canvas */}
+      <div className="absolute inset-0 z-10">
+        <HeroCanvas />
+      </div>
+
+      {/* Left spec labels */}
+      <div ref={leftRef} className="absolute left-6 top-1/2 -translate-y-1/2 z-20 space-y-8">
+        <div className="spec-item pl-3 border-l-2 border-indigo-400/70">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-pulse" />
+            <p className="text-[9px] font-mono uppercase tracking-[0.3em] text-indigo-400/80">01 / Layer</p>
+          </div>
+          <p className="text-base font-bold tracking-wide uppercase text-white">DORA</p>
+          <p className="text-xs mt-1 leading-relaxed max-w-[150px] text-slate-400">Deploy Freq & MTTR</p>
+        </div>
+        <div className="spec-item pl-3 border-l-2 border-violet-400/70">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="h-1.5 w-1.5 rounded-full bg-violet-400 animate-pulse" style={{ animationDelay: '0.5s' }} />
+            <p className="text-[9px] font-mono uppercase tracking-[0.3em] text-violet-400/80">02 / Layer</p>
+          </div>
+          <p className="text-base font-bold tracking-wide uppercase text-white">Cycle Time</p>
+          <p className="text-xs mt-1 leading-relaxed max-w-[150px] text-slate-400">Lead Time for Changes</p>
         </div>
       </div>
+
+      {/* Right spec labels */}
+      <div ref={rightRef} className="absolute right-6 top-1/2 -translate-y-1/2 z-20 space-y-8 text-right">
+        <div className="spec-item pr-3 border-r-2 border-cyan-400/70">
+          <div className="flex items-center justify-end gap-2 mb-1">
+            <p className="text-[9px] font-mono uppercase tracking-[0.3em] text-cyan-400/80">03 / Layer</p>
+            <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" style={{ animationDelay: '1s' }} />
+          </div>
+          <p className="text-base font-bold tracking-wide uppercase text-white">Live Events</p>
+          <p className="text-xs mt-1 leading-relaxed max-w-[150px] ml-auto text-slate-400">Real-Time WebSocket Feed</p>
+        </div>
+        <div className="spec-item pr-3 border-r-2 border-emerald-400/70">
+          <div className="flex items-center justify-end gap-2 mb-1">
+            <p className="text-[9px] font-mono uppercase tracking-[0.3em] text-emerald-400/80">04 / Layer</p>
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" style={{ animationDelay: '1.5s' }} />
+          </div>
+          <p className="text-base font-bold tracking-wide uppercase text-white">Analytics</p>
+          <p className="text-xs mt-1 leading-relaxed max-w-[150px] ml-auto text-slate-400">Contributor Intelligence</p>
+        </div>
+      </div>
+
+      {/* Scroll hint — visible at load, fades away on first scroll */}
+      <div ref={scrollHintRef} className="absolute bottom-8 left-0 right-0 z-30 flex flex-col items-center gap-2">
+        <p className="text-xs text-white/40 tracking-widest uppercase font-mono">Scroll to explore</p>
+        <div className="flex flex-col items-center gap-1 animate-bounce">
+          <div className="h-6 w-4 rounded-full border border-white/20 flex items-start justify-center pt-1">
+            <div className="h-1.5 w-0.5 rounded-full bg-white/40" />
+          </div>
+        </div>
+      </div>
+
+      {/* End-of-scroll CTA */}
+      <div ref={ctaRef} className="absolute bottom-8 left-0 right-0 z-30 flex flex-col items-center gap-4 opacity-0 invisible">
+        <Link
+          href="/register"
+          className="group flex items-center gap-2 rounded-full bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500 px-8 py-3.5 text-sm font-bold text-white shadow-xl shadow-indigo-500/30 hover:shadow-indigo-500/50 transition-all hover:-translate-y-0.5"
+        >
+          Start for Free
+          <span className="transition-transform group-hover:translate-x-0.5 inline-block">→</span>
+        </Link>
+        <p className="text-[10px] text-white/30 font-mono uppercase tracking-widest">Free for teams under 10 · No card required</p>
+      </div>
+
     </div>
   )
 }
