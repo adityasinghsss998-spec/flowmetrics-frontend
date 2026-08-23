@@ -1,8 +1,12 @@
 'use client'
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { useAuthStore } from '@/store/authStore'
 
+import { useEffect, useState } from 'react'
+import { useRouter, useParams } from 'next/navigation'
+import { useAuthStore } from '@/store/authStore'
+import Navbar from '@/components/layout/Navbar'
+import Sidebar from '@/components/layout/Sidebar'
+import { useSocket } from '@/hooks/useSocket'
+import { OrgRoleProvider } from '@/hooks/useOrgRole'
 import { PendingInvitesBanner } from '@/components/PendingInvitesBanner'
 
 export default function DashboardLayout({
@@ -11,28 +15,54 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   const router = useRouter()
+  const params = useParams()
   const { isAuthenticated } = useAuthStore()
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  const repoId = params?.repoId ? Number(params.repoId) : null
+  useSocket(repoId)
 
   useEffect(() => {
-    // Check Zustand store first, then fall back to localStorage
-    const storedToken = localStorage.getItem('accessToken')
-    if (!isAuthenticated && !storedToken) {
+    setMounted(true)
+    const token = localStorage.getItem('accessToken')
+    if (!isAuthenticated && !token) {
       router.replace('/login')
     }
   }, [isAuthenticated, router])
 
-  // Prevent flash of authenticated content while redirecting
-  const storedToken = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
-  if (!isAuthenticated && !storedToken) {
+  if (!mounted) {
+    return null
+  }
+
+  const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null
+  if (!isAuthenticated && !token) {
     return null
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <PendingInvitesBanner />
-      <div className="flex-1">
-        {children}
+    <OrgRoleProvider>
+      <div className="flex h-screen overflow-hidden bg-background">
+        <Sidebar
+          mobileOpen={mobileOpen}
+          onMobileClose={() => setMobileOpen(false)}
+        />
+
+        <div className="flex flex-1 flex-col overflow-hidden min-w-0">
+          <PendingInvitesBanner />
+          <Navbar
+            variant="dashboard"
+            onMenuClick={() => setMobileOpen(true)}
+          />
+
+          <main
+            id="dashboard-main"
+            className="flex-1 overflow-y-auto p-4 lg:p-6"
+          >
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
+    </OrgRoleProvider>
   )
 }
