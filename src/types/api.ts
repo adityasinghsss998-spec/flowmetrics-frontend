@@ -201,6 +201,20 @@ export interface User {
   github_username: string | null
 }
 
+export interface Invitation {
+  id: number
+  org_id: number
+  org_name: string
+  org_slug: string
+  role: 'admin' | 'member'
+  token: string
+  email: string
+  invited_by_name: string
+  invited_by_email?: string
+  expires_at: string
+  created_at: string
+}
+
 export interface ApiResponse<T> {
   data: T
   message?: string

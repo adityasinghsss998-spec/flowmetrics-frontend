@@ -3,6 +3,8 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/authStore'
 
+import { PendingInvitesBanner } from '@/components/PendingInvitesBanner'
+
 export default function DashboardLayout({
   children,
 }: {
@@ -26,8 +28,11 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {children}
+    <div className="min-h-screen bg-background flex flex-col">
+      <PendingInvitesBanner />
+      <div className="flex-1">
+        {children}
+      </div>
     </div>
   )
 }
