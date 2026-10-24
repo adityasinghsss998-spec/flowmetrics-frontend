@@ -82,15 +82,46 @@ export function MemberRoleProvider({ children }: { children: React.ReactNode }) 
   }, [orgs, selectedOrgId])
 
   const role = React.useMemo<OrgRole>(() => {
-    if (!activeOrg || !user) return null
-    if (activeOrg.owner_id === user.id) return 'owner'
-    const member = activeOrg.members?.find((m) => m.id === user.id)
+    if (!activeOrg) return null
+
+    let currentUserId: string | number | null = user?.id ?? null
+    if (!currentUserId && typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('flowmetrics-auth')
+        if (stored) {
+          const parsed = JSON.parse(stored)
+          if (parsed?.state?.user?.id != null) {
+            currentUserId = parsed.state.user.id
+          }
+        }
+      } catch {}
+    }
+
+    if (!currentUserId) {
+      if (activeOrg.members && activeOrg.members.length === 1) {
+        return (activeOrg.members[0].OrgMember?.role as OrgRole) || 'owner'
+      }
+      return null
+    }
+
+    const userIdStr = String(currentUserId)
+
+    if (activeOrg.owner_id != null && String(activeOrg.owner_id) === userIdStr) {
+      return 'owner'
+    }
+
+    const member = activeOrg.members?.find((m) => String(m.id) === userIdStr)
     if (member?.OrgMember?.role) {
       return member.OrgMember.role as OrgRole
     }
     if (member?.role) {
       return member.role as OrgRole
     }
+
+    if (activeOrg.members && activeOrg.members.length === 1 && String(activeOrg.members[0].id) === userIdStr) {
+      return 'owner'
+    }
+
     return 'member'
   }, [activeOrg, user])
 

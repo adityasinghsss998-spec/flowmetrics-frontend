@@ -55,84 +55,77 @@ function InviteAcceptContent() {
   const isUserLoggedIn = isAuthenticated || !!storedToken
 
   return (
-    <div className="flex flex-col items-center justify-center p-4 sm:p-6 min-h-[70vh]">
-      <div className="w-full max-w-md bg-card border border-border/80 rounded-2xl p-6 sm:p-8 shadow-2xl relative overflow-hidden backdrop-blur-xl">
-        <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
-
+    <div className="flex flex-col items-center justify-center p-4 min-h-[60vh]">
+      <div className="w-full max-w-md rounded-[4px] border border-[var(--fm-line)] bg-[var(--fm-surface-raised)] p-6 sm:p-8">
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-10 text-center space-y-4">
-            <div className="h-12 w-12 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
-              <Loader2 className="h-6 w-6 animate-spin" />
-            </div>
+          <div className="flex flex-col items-center justify-center py-8 text-center space-y-3">
+            <Loader2 className="h-6 w-6 animate-spin text-[var(--fm-accent)]" />
             <div>
-              <h2 className="text-lg font-semibold text-foreground">Processing Invitation</h2>
-              <p className="text-sm text-muted-foreground mt-1">Verifying your token and joining the team...</p>
+              <h2 className="font-mono text-base font-semibold text-[var(--fm-text)]">Processing Invitation</h2>
+              <p className="text-xs text-[var(--fm-text-muted)] mt-1">Verifying your token and joining team…</p>
             </div>
           </div>
         ) : !isUserLoggedIn ? (
-          <div className="flex flex-col items-center text-center space-y-4 py-4">
-            <div className="h-12 w-12 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
-              <LogIn className="h-6 w-6" />
+          <div className="flex flex-col items-center text-center space-y-4 py-2">
+            <div className="flex h-10 w-10 items-center justify-center rounded-[4px] border border-[var(--fm-line)] bg-[var(--fm-surface)] text-[var(--fm-text-muted)]">
+              <LogIn className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-foreground">Authentication Required</h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                Please log in or sign up to accept this organization invitation.
+              <h2 className="font-mono text-lg font-bold text-[var(--fm-text)]">Sign In Required</h2>
+              <p className="text-xs text-[var(--fm-text-muted)] mt-1">
+                Please log in to accept this organization invitation.
               </p>
             </div>
-            <div className="pt-4 w-full flex flex-col gap-2">
+            <div className="pt-2 w-full">
               <Link
                 href={`/login?redirect=/invite/accept?token=${token || ''}`}
-                className="w-full inline-flex items-center justify-center rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-sm h-9 px-4 transition-colors"
+                className="btn-accent w-full justify-center"
               >
                 Log In to Accept
               </Link>
             </div>
           </div>
         ) : success ? (
-          <div className="flex flex-col items-center text-center space-y-4 py-4">
-            <div className="h-14 w-14 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-              <CheckCircle2 className="h-8 w-8" />
-            </div>
+          <div className="flex flex-col items-center text-center space-y-4 py-2">
+            <CheckCircle2 className="h-10 w-10 text-[var(--fm-status-good)]" />
             <div>
-              <h2 className="text-2xl font-bold text-foreground">Welcome Aboard!</h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                You have successfully joined{' '}
-                <span className="font-semibold text-indigo-400">{orgData?.orgName || 'the organization'}</span>
+              <h2 className="font-mono text-lg font-bold text-[var(--fm-text)]">Invitation Accepted</h2>
+              <p className="text-xs text-[var(--fm-text-muted)] mt-1">
+                You joined{' '}
+                <span className="font-mono text-[var(--fm-text)] font-semibold">{orgData?.orgName || 'the organization'}</span>
                 {orgData?.role ? ` as a ${orgData.role}` : ''}.
               </p>
             </div>
-            <div className="pt-4 w-full">
-              <Button
+            <div className="pt-2 w-full">
+              <button
                 onClick={() => router.push('/dashboard')}
-                className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium flex items-center justify-center gap-2"
+                className="btn-accent w-full justify-center"
               >
                 Go to Dashboard
-                <ArrowRight className="h-4 w-4" />
-              </Button>
+                <ArrowRight className="h-4 w-4 ml-1.5" />
+              </button>
             </div>
           </div>
         ) : (
-          <div className="flex flex-col items-center text-center space-y-4 py-4">
-            <div className="h-14 w-14 rounded-full bg-destructive/10 border border-destructive/30 flex items-center justify-center text-destructive">
-              <AlertCircle className="h-8 w-8" />
-            </div>
+          <div className="flex flex-col items-center text-center space-y-4 py-2">
+            <AlertCircle className="h-10 w-10 text-[var(--fm-status-poor)]" />
             <div>
-              <h2 className="text-xl font-bold text-foreground">Unable to Accept Invitation</h2>
-              <p className="text-sm text-muted-foreground mt-1 text-balance">
+              <h2 className="font-mono text-lg font-bold text-[var(--fm-text)]">Unable to Accept</h2>
+              <p className="text-xs text-[var(--fm-text-muted)] mt-1">
                 {error || 'This invitation token is invalid or has expired.'}
               </p>
             </div>
-            <div className="pt-4 w-full flex gap-3">
+            <div className="pt-2 w-full flex gap-3">
               <Link
                 href="/dashboard"
-                className="flex-1 inline-flex items-center justify-center rounded-lg border border-border bg-background hover:bg-muted text-foreground text-sm font-medium h-9 px-4 transition-colors"
+                className="flex-1 inline-flex items-center justify-center rounded-[4px] border border-[var(--fm-line)] bg-transparent hover:bg-[var(--fm-surface)] text-[var(--fm-text)] font-mono text-xs h-8 px-4"
               >
                 Dashboard
               </Link>
               <Button
                 onClick={() => window.location.reload()}
-                className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white"
+                size="sm"
+                className="flex-1"
               >
                 Try Again
               </Button>
@@ -148,8 +141,8 @@ export default function InviteAcceptPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex items-center justify-center min-h-[70vh]">
-          <Loader2 className="h-8 w-8 animate-spin text-indigo-400" />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <Loader2 className="h-6 w-6 animate-spin text-[var(--fm-accent)]" />
         </div>
       }
     >

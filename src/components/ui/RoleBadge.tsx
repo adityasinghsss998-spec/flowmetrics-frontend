@@ -14,9 +14,9 @@ export function RoleBadge({ role, className, ...props }: RoleBadgeProps) {
   const normalizedRole = (role || 'member').toLowerCase()
 
   const roleStyles: Record<string, string> = {
-    owner: 'border-purple-500/30 bg-purple-500/10 text-purple-400 font-semibold shadow-xs shadow-purple-500/10',
-    admin: 'border-blue-500/30 bg-blue-500/10 text-blue-400 font-semibold shadow-xs shadow-blue-500/10',
-    member: 'border-slate-500/30 bg-slate-500/10 text-slate-400 font-medium',
+    owner: 'border-[var(--fm-accent)] text-[var(--fm-accent)] bg-transparent font-medium',
+    admin: 'border-[var(--fm-line)] text-[var(--fm-text)] bg-[var(--fm-surface)] font-medium',
+    member: 'border-[var(--fm-line)] text-[var(--fm-text-muted)] bg-[var(--fm-surface)] font-normal',
   }
 
   const selectedStyle = roleStyles[normalizedRole] || roleStyles.member
@@ -24,10 +24,14 @@ export function RoleBadge({ role, className, ...props }: RoleBadgeProps) {
   return (
     <Badge
       variant="outline"
-      className={cn('capitalize tracking-wide text-[11px] px-2 py-0.5 border', selectedStyle, className)}
+      className={cn(
+        'font-mono text-[11px] px-2 py-0.5 rounded-[4px] border',
+        selectedStyle,
+        className
+      )}
       {...props}
     >
-      {normalizedRole}
+      {normalizedRole.charAt(0).toUpperCase() + normalizedRole.slice(1)}
     </Badge>
   )
 }

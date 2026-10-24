@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Clock, Activity, Zap, Trash2, X, AlertTriangle } from 'lucide-react'
+import { ArrowLeft, X, AlertTriangle } from 'lucide-react'
 import api from '@/lib/axios'
 import { DoraMetrics, CycleTimeTrendPoint, PrSizeBucket, OpenPr, RecentDeployment } from '@/types/api'
 import DoraScoreCard from '@/components/analytics/DoraScoreCard'
@@ -11,6 +11,7 @@ import CycleTimeTrend from '@/components/analytics/CycleTimeTrend'
 import PrSizeChart from '@/components/analytics/PrSizeChart'
 import OpenPrAlert from '@/components/analytics/OpenPrAlert'
 import RecentDeployments from '@/components/analytics/RecentDeployments'
+import { useCurrentRepo } from '@/hooks/useCurrentRepo'
 import {
   Select,
   SelectContent,
@@ -18,7 +19,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 
 export default function RepoDashboardPage() {
@@ -29,6 +29,7 @@ export default function RepoDashboardPage() {
   const repoId = params.repoId as string
   const days = Number(searchParams.get('days') ?? 30)
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const { repoFullName } = useCurrentRepo(repoId)
 
   const disconnectMutation = useMutation({
     mutationFn: () => api.delete(`/repos/${repoId}`),
@@ -86,47 +87,81 @@ export default function RepoDashboardPage() {
 
   const dora = doraQuery.data
 
+  const hasError =
+    doraQuery.isError ||
+    cycleTrendQuery.isError ||
+    prSizeQuery.isError ||
+    openPrsQuery.isError ||
+    deploymentsQuery.isError
+
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div style={{ maxWidth: 1120, padding: '32px 24px' }}>
+      {/* Header */}
+      <div
+        className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+        style={{ marginBottom: 32 }}
+      >
         <div className="flex items-center gap-3">
-          <Button
+          <button
             id="back-to-dashboard"
-            variant="ghost"
-            size="sm"
+            type="button"
             onClick={() => router.push('/dashboard')}
-            className="text-muted-foreground hover:text-foreground -ml-2 hover:bg-white/5"
+            className="flex items-center gap-1.5 text-sm transition-colors"
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              fontFamily: 'var(--font-ibm-plex-mono)',
+              fontSize: 12,
+              color: 'var(--fm-text-muted)',
+              padding: 0,
+            }}
           >
-            <ArrowLeft className="h-4 w-4 mr-1" />
+            <ArrowLeft className="h-4 w-4" />
             Dashboard
-          </Button>
-          <div className="h-4 w-px bg-white/10" />
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-500/15 border border-indigo-500/20">
-              <Activity className="h-4 w-4 text-indigo-400" />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold tracking-tight text-foreground leading-none">
-                DORA Analytics
-              </h1>
-              <p className="text-[11px] text-muted-foreground/60 mt-0.5">
-                Repository #{repoId}
-              </p>
-            </div>
-          </div>
+          </button>
+          <span style={{ color: 'var(--fm-line)' }}>/</span>
+          <h1
+            style={{
+              fontFamily: 'var(--font-ibm-plex-mono)',
+              fontSize: 16,
+              fontWeight: 600,
+              color: 'var(--fm-text)',
+              margin: 0,
+            }}
+          >
+            {repoFullName || `Repository #${repoId}`}
+          </h1>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-1.5 backdrop-blur">
-            <Clock className="h-3.5 w-3.5 text-muted-foreground/60 shrink-0" />
+          {/* Time range */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              border: '1px solid var(--fm-line)',
+              borderRadius: 4,
+              padding: '4px 10px',
+              background: 'var(--fm-surface)',
+            }}
+          >
+            <span style={{ fontFamily: 'var(--font-ibm-plex-mono)', fontSize: 11, color: 'var(--fm-text-muted)' }}>
+              Period:
+            </span>
             <Select
               value={String(days)}
               onValueChange={(v) => router.push(`?days=${v}`)}
             >
-              <SelectTrigger id="time-range-selector" className="h-7 w-32 border-0 bg-transparent p-0 text-xs font-medium focus-visible:ring-0 shadow-none">
+              <SelectTrigger
+                id="time-range-selector"
+                className="h-7 w-28 border-0 bg-transparent p-0 text-xs font-medium focus-visible:ring-0 shadow-none"
+                style={{ fontFamily: 'var(--font-ibm-plex-mono)', fontSize: 12, color: 'var(--fm-text)' }}
+              >
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent style={{ background: 'var(--fm-surface-raised)', border: '1px solid var(--fm-line)', borderRadius: 4 }}>
                 <SelectItem value="7">Last 7 days</SelectItem>
                 <SelectItem value="30">Last 30 days</SelectItem>
                 <SelectItem value="60">Last 60 days</SelectItem>
@@ -135,113 +170,152 @@ export default function RepoDashboardPage() {
             </Select>
           </div>
 
-          <Button
+          {/* Disconnect */}
+          <button
             type="button"
-            variant="outline"
-            size="sm"
             onClick={() => setConfirmOpen(true)}
-            className="border-red-500/20 bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 text-xs font-semibold h-9 rounded-xl"
+            style={{
+              background: 'color-mix(in srgb, var(--fm-status-poor) 12%, transparent)',
+              border: '1px solid color-mix(in srgb, var(--fm-status-poor) 30%, transparent)',
+              borderRadius: 4,
+              color: 'var(--fm-status-poor)',
+              fontFamily: 'var(--font-ibm-plex-mono)',
+              fontSize: 12,
+              padding: '6px 14px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
           >
-            <Trash2 className="h-3.5 w-3.5 mr-1.5" />
             Disconnect
-          </Button>
+          </button>
         </div>
       </div>
 
+      {/* Disconnect confirm dialog */}
       <Dialog open={confirmOpen} onOpenChange={(val) => { if (!val) setConfirmOpen(false) }}>
-        <DialogContent className="max-w-md border-white/[0.08] bg-card shadow-2xl p-6 space-y-4" showCloseButton={false}>
-          <div className="flex items-center justify-between border-b border-white/[0.06] pb-4">
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-red-500/20 bg-red-500/10">
-                <Trash2 className="h-3.5 w-3.5 text-red-400" />
-              </div>
-              <span className="text-sm font-semibold text-foreground">Disconnect Repository</span>
-            </div>
+        <DialogContent
+          className="max-w-md p-6 space-y-4"
+          showCloseButton={false}
+          style={{
+            background: 'var(--fm-surface-raised)',
+            border: '1px solid var(--fm-line)',
+            borderRadius: 4,
+          }}
+        >
+          <div className="flex items-center justify-between pb-4" style={{ borderBottom: '1px solid var(--fm-line)' }}>
+            <span style={{ fontFamily: 'var(--font-ibm-plex-mono)', fontSize: 14, fontWeight: 600, color: 'var(--fm-text)' }}>
+              Disconnect repository
+            </span>
             <button
               type="button"
               onClick={() => setConfirmOpen(false)}
-              className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-white/[0.05] hover:text-foreground transition-colors"
+              style={{ background: 'none', border: 'none', color: 'var(--fm-text-muted)', cursor: 'pointer', borderRadius: 4 }}
             >
               <X className="h-4 w-4" />
             </button>
           </div>
-
-          <p className="text-xs text-muted-foreground">
-            Are you sure you want to disconnect repository <strong className="text-foreground font-semibold">#{repoId}</strong>? Webhook tracking will stop and you will be returned to the dashboard.
+          <p style={{ fontSize: 13, color: 'var(--fm-text-muted)', fontFamily: 'var(--font-ibm-plex-sans)', lineHeight: 1.6 }}>
+            Disconnect repository <strong style={{ color: 'var(--fm-text)' }}>#{repoId}</strong>? Webhook tracking will stop and you will be returned to the dashboard. Analytics data is preserved.
           </p>
-
           <div className="flex justify-end gap-2 pt-2">
-            <button
-              type="button"
-              onClick={() => setConfirmOpen(false)}
-              className="h-9 px-4 rounded-lg border border-white/[0.08] text-xs font-semibold text-muted-foreground hover:bg-white/[0.05] transition-colors"
-            >
+            <button type="button" onClick={() => setConfirmOpen(false)} className="btn-ghost">
               Cancel
             </button>
             <button
               type="button"
               disabled={disconnectMutation.isPending}
               onClick={() => disconnectMutation.mutate()}
-              className="h-9 px-4 rounded-lg bg-red-600 text-xs font-semibold text-white hover:bg-red-500 disabled:opacity-50 transition-colors"
+              style={{
+                background: 'var(--fm-status-poor)',
+                color: '#fff',
+                fontFamily: 'var(--font-ibm-plex-mono)',
+                fontSize: 13,
+                fontWeight: 500,
+                border: 'none',
+                borderRadius: 4,
+                padding: '7px 16px',
+                cursor: disconnectMutation.isPending ? 'not-allowed' : 'pointer',
+                opacity: disconnectMutation.isPending ? 0.5 : 1,
+              }}
             >
-              {disconnectMutation.isPending ? 'Disconnecting…' : 'Disconnect Repository'}
+              {disconnectMutation.isPending ? 'Disconnecting...' : 'Disconnect'}
             </button>
           </div>
         </DialogContent>
       </Dialog>
 
-      {(doraQuery.isError || cycleTrendQuery.isError || prSizeQuery.isError || openPrsQuery.isError || deploymentsQuery.isError) && (
-        <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-xs font-semibold text-red-400 flex items-center gap-2.5">
-          <AlertTriangle className="h-4 w-4 shrink-0" />
-          <span>Failed to load analytics data for this repository. Please verify API Gateway and service connectivity.</span>
+      {/* Error banner */}
+      {hasError && (
+        <div
+          className="flex items-center gap-3 p-4 mb-6"
+          style={{
+            border: '1px solid color-mix(in srgb, var(--fm-status-poor) 30%, transparent)',
+            borderRadius: 4,
+            background: 'color-mix(in srgb, var(--fm-status-poor) 8%, transparent)',
+          }}
+        >
+          <AlertTriangle className="h-4 w-4 shrink-0" style={{ color: 'var(--fm-status-poor)' }} />
+          <span style={{ fontSize: 13, color: 'var(--fm-text-muted)', fontFamily: 'var(--font-ibm-plex-sans)' }}>
+            Failed to load some analytics data. Check API connectivity.
+          </span>
         </div>
       )}
 
-      <div className="relative">
-        <div className="absolute -inset-4 rounded-3xl bg-gradient-to-r from-indigo-500/5 via-violet-500/5 to-transparent blur-2xl pointer-events-none" />
-        <div className="relative mb-3 flex items-center gap-2">
-          <Zap className="h-3.5 w-3.5 text-indigo-400" />
-          <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">
-            DORA Metrics · Last {days} days
-          </span>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <DoraScoreCard
-            title="Deployment Frequency"
-            value={dora ? `${dora.deployment_frequency.deployments_per_week.toFixed(1)}/wk` : doraQuery.isError ? 'Error' : null}
-            subtitle={dora ? `${dora.deployment_frequency.total_deployments} total · ${dora.deployment_frequency.successful} success` : doraQuery.isError ? 'Failed to load' : null}
-            level={dora?.deployment_frequency.level ?? null}
-            trend={dora?.deployment_frequency.trend_percent ?? null}
-            isLoading={doraQuery.isLoading}
-          />
-          <DoraScoreCard
-            title="Lead Time for Changes"
-            value={dora?.lead_time.avg_lead_time_hours != null ? `${dora.lead_time.avg_lead_time_hours.toFixed(1)}h` : doraQuery.isError ? 'Error' : null}
-            subtitle={dora ? `${dora.lead_time.total_prs} PRs · ${dora.lead_time.prs_with_lead_time} measured` : doraQuery.isError ? 'Failed to load' : null}
-            level={dora?.lead_time.level ?? null}
-            trend={null}
-            isLoading={doraQuery.isLoading}
-          />
-          <DoraScoreCard
-            title="Change Failure Rate"
-            value={dora ? `${dora.change_failure_rate.failure_rate_percent.toFixed(1)}%` : doraQuery.isError ? 'Error' : null}
-            subtitle={dora ? `${dora.change_failure_rate.failed_deployments} of ${dora.change_failure_rate.total_deployments} failed` : doraQuery.isError ? 'Failed to load' : null}
-            level={dora?.change_failure_rate.level ?? null}
-            trend={null}
-            isLoading={doraQuery.isLoading}
-          />
-          <DoraScoreCard
-            title="Mean Time to Recovery"
-            value={dora?.mean_time_to_recovery.avg_mttr_hours != null ? `${dora.mean_time_to_recovery.avg_mttr_hours.toFixed(1)}h` : doraQuery.isError ? 'Error' : null}
-            subtitle={dora ? `${dora.mean_time_to_recovery.incidents_recovered} incidents recovered` : doraQuery.isError ? 'Failed to load' : null}
-            level={dora?.mean_time_to_recovery.level ?? null}
-            trend={null}
-            isLoading={doraQuery.isLoading}
-          />
-        </div>
+      {/* DORA section label */}
+      <div style={{ marginBottom: 12 }}>
+        <span style={{
+          fontFamily: 'var(--font-ibm-plex-mono)',
+          fontSize: 11,
+          color: 'var(--fm-text-muted)',
+        }}>
+          Dora metrics, last {days} days
+        </span>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      {/* DORA cards */}
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4" style={{ marginBottom: 32 }}>
+        <DoraScoreCard
+          title="Deployment frequency"
+          value={dora ? `${dora.deployment_frequency.deployments_per_week.toFixed(1)}/wk` : doraQuery.isError ? 'Error' : null}
+          subtitle={dora ? `${dora.deployment_frequency.total_deployments} total, ${dora.deployment_frequency.successful} successful` : doraQuery.isError ? 'Failed to load' : null}
+          level={dora?.deployment_frequency.level ?? null}
+          trend={dora?.deployment_frequency.trend_percent ?? null}
+          isLoading={doraQuery.isLoading}
+          hasData={(dora?.deployment_frequency.total_deployments ?? 0) > 0}
+        />
+        <DoraScoreCard
+          title="Lead time for changes"
+          value={dora?.lead_time.avg_lead_time_hours != null ? `${dora.lead_time.avg_lead_time_hours.toFixed(1)}h` : doraQuery.isError ? 'Error' : null}
+          subtitle={dora ? `${dora.lead_time.total_prs} PRs, ${dora.lead_time.prs_with_lead_time} measured` : doraQuery.isError ? 'Failed to load' : null}
+          level={dora?.lead_time.level ?? null}
+          trend={null}
+          isLoading={doraQuery.isLoading}
+          hasData={(dora?.lead_time.prs_with_lead_time ?? 0) > 0 && dora?.lead_time.avg_lead_time_hours != null}
+        />
+        <DoraScoreCard
+          title="Change failure rate"
+          value={dora ? `${dora.change_failure_rate.failure_rate_percent.toFixed(1)}%` : doraQuery.isError ? 'Error' : null}
+          subtitle={dora ? `${dora.change_failure_rate.failed_deployments} of ${dora.change_failure_rate.total_deployments} failed` : doraQuery.isError ? 'Failed to load' : null}
+          level={dora?.change_failure_rate.level ?? null}
+          trend={null}
+          isLoading={doraQuery.isLoading}
+          hasData={(dora?.change_failure_rate.total_deployments ?? 0) > 0}
+        />
+        <DoraScoreCard
+          title="Mean time to recovery"
+          value={dora?.mean_time_to_recovery.avg_mttr_hours != null ? `${dora.mean_time_to_recovery.avg_mttr_hours.toFixed(1)}h` : doraQuery.isError ? 'Error' : null}
+          subtitle={dora ? `${dora.mean_time_to_recovery.incidents_recovered} incidents recovered` : doraQuery.isError ? 'Failed to load' : null}
+          level={dora?.mean_time_to_recovery.level ?? null}
+          trend={null}
+          isLoading={doraQuery.isLoading}
+          hasData={(dora?.mean_time_to_recovery.incidents_recovered ?? 0) > 0 && dora?.mean_time_to_recovery.avg_mttr_hours != null}
+        />
+      </div>
+
+      {/* Charts */}
+      <div className="grid gap-5 lg:grid-cols-2" style={{ marginBottom: 24 }}>
         <CycleTimeTrend data={cycleTrendQuery.data ?? []} isLoading={cycleTrendQuery.isLoading} />
         <PrSizeChart data={prSizeQuery.data ?? []} isLoading={prSizeQuery.isLoading} />
       </div>

@@ -60,7 +60,7 @@ function TabsList({ className, ...props }: React.HTMLAttributes<HTMLDivElement>)
     <div
       data-slot="tabs-list"
       className={cn(
-        'inline-flex h-9 items-center justify-start rounded-lg bg-muted/60 p-1 text-muted-foreground border border-border/50',
+        'inline-flex h-8 items-center justify-start rounded-[4px] bg-[var(--fm-surface)] p-0.5 border border-border',
         className
       )}
       {...props}
@@ -84,10 +84,10 @@ function TabsTrigger({ className, value, children, ...props }: TabsTriggerProps)
       data-state={isSelected ? 'active' : 'inactive'}
       onClick={() => onValueChange(value)}
       className={cn(
-        'inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-xs font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 cursor-pointer',
+        'inline-flex items-center justify-center whitespace-nowrap rounded-[2px] px-3 py-1 font-mono text-xs font-medium transition-colors cursor-pointer outline-none focus-visible:outline-1 focus-visible:outline-[var(--fm-accent)] disabled:pointer-events-none disabled:opacity-50',
         isSelected
-          ? 'bg-background text-foreground shadow-xs font-semibold'
-          : 'text-muted-foreground hover:text-foreground hover:bg-background/40',
+          ? 'bg-[var(--fm-surface-raised)] text-[var(--fm-text)] border border-[var(--fm-line)]'
+          : 'text-[var(--fm-text-muted)] hover:text-[var(--fm-text)]',
         className
       )}
       {...props}
@@ -110,10 +110,7 @@ function TabsContent({ className, value, children, ...props }: TabsContentProps)
       role="tabpanel"
       data-state={selectedValue === value ? 'active' : 'inactive'}
       data-slot="tabs-content"
-      className={cn(
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 animate-in fade-in-50 duration-150',
-        className
-      )}
+      className={cn('outline-none', className)}
       {...props}
     >
       {children}

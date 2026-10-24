@@ -89,7 +89,6 @@ export default function RecordDeploymentDialog({
         completedAt: compIso
       })
       
-      alert("Deployment recorded successfully")
       onSuccess()
       onOpenChange(false)
     } catch (err: any) {
@@ -101,23 +100,23 @@ export default function RecordDeploymentDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] border-white/[0.08] bg-card p-6">
+      <DialogContent className="sm:max-w-md border-[var(--fm-line)] bg-[var(--fm-surface-raised)] p-6">
         <DialogHeader>
-          <DialogTitle className="text-lg font-semibold text-foreground">Record Deployment</DialogTitle>
-          <DialogDescription className="text-sm text-muted-foreground">
-            Manually record a deployment for this repository.
+          <DialogTitle className="font-mono text-base font-semibold text-[var(--fm-text)]">Record Deployment</DialogTitle>
+          <DialogDescription className="text-xs text-[var(--fm-text-muted)]">
+            Manually log a deployment event for this repository.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+        <form onSubmit={handleSubmit} className="space-y-4 mt-2">
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="environment" className="text-xs font-medium text-muted-foreground">Environment</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="environment" className="font-mono text-xs text-[var(--fm-text-muted)]">Environment</Label>
               <Select value={environment} onValueChange={(val) => { if (val) setEnvironment(val) }}>
-                <SelectTrigger id="environment" className="h-9 border-white/[0.08] bg-white/[0.03]">
-                  <SelectValue placeholder="Select environment" />
+                <SelectTrigger id="environment" className="h-8 border-[var(--fm-line)] bg-[var(--fm-surface)] font-mono text-xs">
+                  <SelectValue placeholder="Environment" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="border-[var(--fm-line)] bg-[var(--fm-surface)] font-mono text-xs">
                   <SelectItem value="production">Production</SelectItem>
                   <SelectItem value="staging">Staging</SelectItem>
                   <SelectItem value="preview">Preview</SelectItem>
@@ -125,13 +124,13 @@ export default function RecordDeploymentDialog({
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="status" className="text-xs font-medium text-muted-foreground">Status</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="status" className="font-mono text-xs text-[var(--fm-text-muted)]">Status</Label>
               <Select value={status} onValueChange={(val) => { if (val) setStatus(val) }}>
-                <SelectTrigger id="status" className="h-9 border-white/[0.08] bg-white/[0.03]">
-                  <SelectValue placeholder="Select status" />
+                <SelectTrigger id="status" className="h-8 border-[var(--fm-line)] bg-[var(--fm-surface)] font-mono text-xs">
+                  <SelectValue placeholder="Status" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="border-[var(--fm-line)] bg-[var(--fm-surface)] font-mono text-xs">
                   <SelectItem value="success">Success</SelectItem>
                   <SelectItem value="failure">Failure</SelectItem>
                 </SelectContent>
@@ -139,75 +138,77 @@ export default function RecordDeploymentDialog({
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="sha" className="text-xs font-medium text-muted-foreground">Commit SHA (Optional)</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="sha" className="font-mono text-xs text-[var(--fm-text-muted)]">Commit SHA (Optional)</Label>
             <Input
               id="sha"
               maxLength={40}
-              placeholder="abc1234 (optional)"
+              placeholder="e.g. 7b3d1f8"
               value={sha}
               onChange={(e) => setSha(e.target.value)}
-              className="h-9 border-white/[0.08] bg-white/[0.03]"
+              className="h-8 border-[var(--fm-line)] bg-[var(--fm-surface)] font-mono text-xs"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="deployedBy" className="text-xs font-medium text-muted-foreground">Deployed By (Optional)</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="deployedBy" className="font-mono text-xs text-[var(--fm-text-muted)]">Deployed By (Optional)</Label>
             <Input
               id="deployedBy"
               placeholder="GitHub username"
               value={deployedByUsername}
               onChange={(e) => setDeployedByUsername(e.target.value)}
-              className="h-9 border-white/[0.08] bg-white/[0.03]"
+              className="h-8 border-[var(--fm-line)] bg-[var(--fm-surface)] font-mono text-xs"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="deployedAt" className="text-xs font-medium text-muted-foreground">Started At *</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="deployedAt" className="font-mono text-xs text-[var(--fm-text-muted)]">Started At *</Label>
               <Input
                 id="deployedAt"
                 type="datetime-local"
                 required
                 value={deployedAt}
                 onChange={(e) => setDeployedAt(e.target.value)}
-                className="h-9 border-white/[0.08] bg-white/[0.03]"
+                className="h-8 border-[var(--fm-line)] bg-[var(--fm-surface)] font-mono text-xs"
               />
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="completedAt" className="text-xs font-medium text-muted-foreground">Completed At</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="completedAt" className="font-mono text-xs text-[var(--fm-text-muted)]">Completed At</Label>
               <Input
                 id="completedAt"
                 type="datetime-local"
                 value={completedAt}
                 onChange={(e) => setCompletedAt(e.target.value)}
-                className="h-9 border-white/[0.08] bg-white/[0.03]"
+                className="h-8 border-[var(--fm-line)] bg-[var(--fm-surface)] font-mono text-xs"
               />
             </div>
           </div>
 
-          <div className="pt-2 text-sm text-muted-foreground/80 font-medium">
-            Build duration: {getBuildDuration()} minutes
+          <div className="font-mono text-xs text-[var(--fm-text-muted)] pt-1">
+            Build duration: <span className="text-[var(--fm-text)] tabular-nums">{getBuildDuration()} minutes</span>
           </div>
 
-          {errorMsg && <p className="text-xs text-red-400 font-medium">{errorMsg}</p>}
+          {errorMsg && (
+            <p className="font-mono text-xs text-[var(--fm-status-poor)]">{errorMsg}</p>
+          )}
 
-          <div className="flex justify-end gap-2 pt-4">
+          <div className="flex justify-end gap-3 pt-3 border-t border-[var(--fm-line)]">
             <Button
               type="button"
               variant="outline"
+              size="sm"
               onClick={() => onOpenChange(false)}
-              className="h-9 border-white/[0.08] bg-transparent hover:bg-white/[0.05]"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="h-9 bg-indigo-600 hover:bg-indigo-500 text-white"
+              size="sm"
             >
-              {isSubmitting ? 'Recording...' : 'Record Deployment'}
+              {isSubmitting ? 'Recording…' : 'Record'}
             </Button>
           </div>
         </form>
