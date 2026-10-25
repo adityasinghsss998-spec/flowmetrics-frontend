@@ -71,7 +71,7 @@ export default function PrsPage() {
             variant="ghost"
             size="sm"
             onClick={() => router.push(`/repos/${repoId}`)}
-            className="border border-[var(--fm-line)] hover:bg-[var(--fm-surface)]"
+            className="border border-[var(--fm-line)]"
           >
             <ArrowLeft className="h-4 w-4 mr-1.5" />
             Overview

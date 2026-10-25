@@ -121,13 +121,15 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
       >
         <Link
           href="/dashboard"
-          className="flex items-center gap-0 min-w-0"
+          className="fm-wordmark-link flex items-center gap-0 min-w-0"
           style={{
             fontFamily: 'var(--font-ibm-plex-mono)',
             fontWeight: 600,
             fontSize: 15,
             color: 'var(--fm-text)',
             letterSpacing: '-0.01em',
+            padding: '2px 6px',
+            borderRadius: 4,
           }}
         >
           {!collapsed && <span>flowmetrics</span>}
@@ -138,8 +140,8 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
           id="sidebar-collapse-toggle"
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           onClick={() => setCollapsed((v) => !v)}
-          className="ml-auto hidden h-6 w-6 shrink-0 items-center justify-center transition-colors lg:flex"
-          style={{ color: 'var(--fm-text-muted)', borderRadius: 4 }}
+          className="fm-btn-quiet ml-auto hidden h-6 w-6 shrink-0 items-center justify-center lg:flex"
+          style={{ color: 'var(--fm-text-muted)', borderRadius: 4, padding: 0 }}
         >
           {collapsed ? (
             <ChevronRight className="h-3.5 w-3.5" />
@@ -153,8 +155,8 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
             id="sidebar-mobile-close"
             aria-label="Close sidebar"
             onClick={onMobileClose}
-            className="ml-auto flex h-6 w-6 shrink-0 items-center justify-center transition-colors lg:hidden"
-            style={{ color: 'var(--fm-text-muted)' }}
+            className="fm-btn-quiet ml-auto flex h-6 w-6 shrink-0 items-center justify-center lg:hidden"
+            style={{ color: 'var(--fm-text-muted)', borderRadius: 4, padding: 0 }}
           >
             <X className="h-4 w-4" />
           </button>
@@ -218,14 +220,17 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
                       className={cn(
                         'flex items-center rounded px-2 py-2 text-sm transition-colors',
                         collapsed ? 'justify-center' : '',
+                        !active && 'fm-sidebar-link'
                       )}
                       style={{
                         fontFamily: 'var(--font-ibm-plex-mono)',
                         fontWeight: active ? 600 : 400,
-                        color: active ? 'var(--fm-text)' : 'var(--fm-text-muted)',
-                        background: active ? 'var(--fm-surface-raised)' : 'transparent',
+                        color: active ? 'var(--fm-text)' : undefined,
+                        background: active ? 'var(--fm-surface-raised)' : undefined,
                         borderRadius: 4,
                         fontSize: 13,
+                        border: active ? '1px solid var(--fm-line)' : '1px solid transparent',
+                        width: '100%',
                       }}
                     >
                       <span className={cn(collapsed ? 'sr-only' : 'truncate')}>{item.label}</span>
@@ -255,12 +260,17 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
                 <li key={repo.id}>
                   <Link
                     href={`/repos/${repo.id}`}
-                    className="flex items-center rounded px-2 py-1.5 text-xs transition-colors"
+                    className={cn(
+                      'flex items-center rounded px-2 py-1.5 text-xs transition-colors',
+                      pathname !== `/repos/${repo.id}` && 'fm-sidebar-link'
+                    )}
                     style={{
                       fontFamily: 'var(--font-ibm-plex-mono)',
-                      color: pathname === `/repos/${repo.id}` ? 'var(--fm-text)' : 'var(--fm-text-muted)',
-                      background: pathname === `/repos/${repo.id}` ? 'var(--fm-surface-raised)' : 'transparent',
+                      color: pathname === `/repos/${repo.id}` ? 'var(--fm-text)' : undefined,
+                      background: pathname === `/repos/${repo.id}` ? 'var(--fm-surface-raised)' : undefined,
                       borderRadius: 4,
+                      border: pathname === `/repos/${repo.id}` ? '1px solid var(--fm-line)' : '1px solid transparent',
+                      width: '100%',
                     }}
                   >
                     <span className="truncate">{repo.name}</span>
@@ -277,10 +287,10 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
         <DropdownMenu>
           <DropdownMenuTrigger
             className={cn(
-              'flex w-full items-center gap-3 rounded px-2 py-2 text-left transition-colors',
+              'fm-btn-quiet flex w-full items-center gap-3 rounded px-2 py-2 text-left',
               collapsed ? 'justify-center' : '',
             )}
-            style={{ borderRadius: 4, outline: 'none' }}
+            style={{ borderRadius: 4, outline: 'none', border: '1px solid transparent' }}
           >
             <div
               className="flex h-7 w-7 shrink-0 items-center justify-center rounded"
@@ -300,7 +310,7 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
               <div className="min-w-0 flex-1">
                 <p
                   className="truncate text-xs font-medium"
-                  style={{ fontFamily: 'var(--font-ibm-plex-mono)', color: 'var(--fm-text)', fontSize: 12 }}
+                  style={{ fontFamily: 'var(--font-ibm-plex-mono)', color: 'inherit', fontSize: 12 }}
                 >
                   {user?.name ?? 'User'}
                 </p>
@@ -330,19 +340,19 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
             <DropdownMenuSeparator style={{ background: 'var(--fm-line)' }} />
             <DropdownMenuItem
               onClick={() => router.push('/settings')}
-              className="cursor-pointer text-sm"
-              style={{ color: 'var(--fm-text)' }}
+              className="fm-sidebar-link cursor-pointer text-sm w-full px-2 py-1.5"
+              style={{ color: 'var(--fm-text)', border: 'none' }}
             >
-              Settings
+              <span>Settings</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator style={{ background: 'var(--fm-line)' }} />
             <DropdownMenuItem
               id="sidebar-signout-button"
               onClick={handleSignOut}
-              className="cursor-pointer text-sm"
-              style={{ color: 'var(--fm-status-poor)' }}
+              className="fm-btn-destructive cursor-pointer text-sm w-full px-2 py-1.5 justify-start"
+              style={{ border: 'none' }}
             >
-              Sign out
+              <span>Sign out</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

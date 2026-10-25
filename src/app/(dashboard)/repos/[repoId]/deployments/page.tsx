@@ -98,7 +98,7 @@ export default function DeploymentsPage() {
             variant="ghost"
             size="sm"
             onClick={() => router.push(`/repos/${repoId}`)}
-            className="border border-[var(--fm-line)] hover:bg-[var(--fm-surface)]"
+            className="border border-[var(--fm-line)]"
           >
             <ArrowLeft className="h-4 w-4 mr-1.5" />
             Overview
@@ -129,10 +129,11 @@ export default function DeploymentsPage() {
           {canRecord && activeOrg && (
             <button
               onClick={() => setRecordOpen(true)}
-              className="btn-accent"
+              className="fm-btn-accent flex items-center gap-1.5"
+              style={{ fontSize: 12, padding: '6px 14px' }}
             >
               <Plus className="h-4 w-4" />
-              Record Deployment
+              <span>Record Deployment</span>
             </button>
           )}
         </div>

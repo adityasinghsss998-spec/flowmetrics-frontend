@@ -138,10 +138,10 @@ export default function SettingsPage() {
               ) : (
                 <button
                   onClick={connectGithub}
-                  className="btn-accent"
-                  style={{ fontSize: 12 }}
+                  className="fm-btn-accent"
+                  style={{ fontSize: 12, padding: '6px 16px' }}
                 >
-                  Connect GitHub
+                  <span>Connect GitHub</span>
                 </button>
               )}
             </div>
@@ -172,11 +172,11 @@ export default function SettingsPage() {
               </p>
               <Link
                 href="/dashboard"
-                className="btn-accent flex items-center gap-2"
-                style={{ fontSize: 12 }}
+                className="fm-btn-accent flex items-center gap-2"
+                style={{ fontSize: 12, padding: '6px 16px' }}
               >
                 <Plus className="h-3.5 w-3.5" />
-                Go to dashboard
+                <span>Go to dashboard</span>
               </Link>
             </div>
           </section>

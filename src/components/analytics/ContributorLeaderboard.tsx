@@ -41,10 +41,10 @@ export default function ContributorLeaderboard({ authors, reviewers, isLoading, 
               'flex-1 py-1 font-mono text-xs transition-colors rounded-[2px]',
               tab === 'authors'
                 ? 'bg-[var(--fm-surface-raised)] text-[var(--fm-text)] border border-[var(--fm-line)] font-medium'
-                : 'text-[var(--fm-text-muted)] hover:text-[var(--fm-text)]'
+                : 'fm-nav-link text-[var(--fm-text-muted)]'
             )}
           >
-            Authors
+            <span>Authors</span>
           </button>
           <button
             onClick={() => setTab('reviewers')}
@@ -52,10 +52,10 @@ export default function ContributorLeaderboard({ authors, reviewers, isLoading, 
               'flex-1 py-1 font-mono text-xs transition-colors rounded-[2px]',
               tab === 'reviewers'
                 ? 'bg-[var(--fm-surface-raised)] text-[var(--fm-text)] border border-[var(--fm-line)] font-medium'
-                : 'text-[var(--fm-text-muted)] hover:text-[var(--fm-text)]'
+                : 'fm-nav-link text-[var(--fm-text-muted)]'
             )}
           >
-            Reviewers
+            <span>Reviewers</span>
           </button>
         </div>
       </div>

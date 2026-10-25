@@ -84,15 +84,15 @@ function TabsTrigger({ className, value, children, ...props }: TabsTriggerProps)
       data-state={isSelected ? 'active' : 'inactive'}
       onClick={() => onValueChange(value)}
       className={cn(
-        'inline-flex items-center justify-center whitespace-nowrap rounded-[2px] px-3 py-1 font-mono text-xs font-medium transition-colors cursor-pointer outline-none focus-visible:outline-1 focus-visible:outline-[var(--fm-accent)] disabled:pointer-events-none disabled:opacity-50',
+        'inline-flex items-center justify-center whitespace-nowrap rounded-[2px] px-3 py-1 font-mono text-xs font-medium cursor-pointer outline-none focus-visible:outline-1 focus-visible:outline-[var(--fm-accent)] disabled:pointer-events-none disabled:opacity-50',
         isSelected
           ? 'bg-[var(--fm-surface-raised)] text-[var(--fm-text)] border border-[var(--fm-line)]'
-          : 'text-[var(--fm-text-muted)] hover:text-[var(--fm-text)]',
+          : 'fm-nav-link text-[var(--fm-text-muted)]',
         className
       )}
       {...props}
     >
-      {children}
+      <span>{children}</span>
     </button>
   )
 }

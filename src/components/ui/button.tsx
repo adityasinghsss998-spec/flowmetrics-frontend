@@ -17,7 +17,7 @@ const buttonVariants = cva(
         ghost:
           "fm-btn-quiet border-transparent bg-transparent",
         destructive:
-          "bg-[var(--fm-status-poor)]/15 text-[var(--fm-status-poor)] border border-[var(--fm-status-poor)]/30 hover:bg-[var(--fm-status-poor)]/25",
+          "fm-btn-destructive",
         link: "fm-inline-link text-[var(--fm-accent)] underline-offset-4",
       },
       size: {
@@ -58,7 +58,7 @@ function Button({
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
     >
-      <span>{children}</span>
+      <span className="inline-flex items-center justify-center gap-[inherit]">{children}</span>
     </ButtonPrimitive>
   )
 }

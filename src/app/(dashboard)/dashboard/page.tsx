@@ -85,14 +85,11 @@ function OrgSelect({
         id="org-selector"
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex h-8 items-center gap-2 px-3 text-sm transition-colors"
+        className="fm-btn-quiet flex h-8 items-center gap-2 px-3 text-sm"
         style={{
-          background: 'var(--fm-surface)',
-          border: '1px solid var(--fm-line)',
           borderRadius: 4,
           fontFamily: 'var(--font-ibm-plex-mono)',
           fontSize: 13,
-          color: 'var(--fm-text)',
           cursor: 'pointer',
         }}
       >
@@ -120,11 +117,11 @@ function OrgSelect({
               <button
                 type="button"
                 onClick={() => { setOpen(false); onCreateOrg() }}
-                className="btn-accent w-full"
+                className="fm-btn-accent w-full"
                 style={{ fontSize: 12 }}
               >
                 <Plus className="h-3.5 w-3.5" />
-                Create organization
+                <span>Create organization</span>
               </button>
             </div>
           ) : (
@@ -134,11 +131,9 @@ function OrgSelect({
                   key={org.id}
                   type="button"
                   onClick={() => { onChange(String(org.id)); setOpen(false) }}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors"
+                  className="fm-sidebar-link flex w-full items-center gap-2 px-3 py-2 text-sm"
                   style={{
-                    background: 'transparent',
                     border: 'none',
-                    color: 'var(--fm-text)',
                     cursor: 'pointer',
                     fontFamily: 'var(--font-ibm-plex-sans)',
                     fontSize: 13,
@@ -243,8 +238,8 @@ function CreateOrgModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex h-7 w-7 items-center justify-center transition-colors"
-            style={{ background: 'none', border: 'none', color: 'var(--fm-text-muted)', cursor: 'pointer', borderRadius: 4 }}
+            className="fm-btn-quiet flex h-7 w-7 items-center justify-center p-0"
+            style={{ borderRadius: 4 }}
           >
             <X className="h-4 w-4" />
           </button>
@@ -292,16 +287,16 @@ function CreateOrgModal({
             <button
               type="button"
               onClick={onClose}
-              className="btn-ghost"
+              className="fm-btn-quiet"
             >
-              Cancel
+              <span>Cancel</span>
             </button>
             <button
               type="submit"
               disabled={mutation.isPending || !name.trim()}
-              className="btn-accent"
+              className="fm-btn-accent"
             >
-              {mutation.isPending ? 'Creating...' : 'Create organization'}
+              <span>{mutation.isPending ? 'Creating...' : 'Create organization'}</span>
             </button>
           </div>
         </form>
@@ -478,10 +473,10 @@ function ConnectModal({
                     id={`connect-${repo.github_repo_id}`}
                     disabled={isPending && connectingRepo === repo.full_name}
                     onClick={() => onConnect(repo.full_name)}
-                    className="btn-accent shrink-0 whitespace-nowrap"
+                    className="fm-btn-accent shrink-0 whitespace-nowrap"
                     style={{ fontSize: 12, padding: '6px 14px' }}
                   >
-                    {isPending && connectingRepo === repo.full_name ? 'Connecting...' : 'Connect'}
+                    <span>{isPending && connectingRepo === repo.full_name ? 'Connecting...' : 'Connect'}</span>
                   </button>
                 </div>
               ))}
@@ -537,7 +532,8 @@ function DisconnectConfirmModal({
           <button
             type="button"
             onClick={onClose}
-            style={{ background: 'none', border: 'none', color: 'var(--fm-text-muted)', cursor: 'pointer', borderRadius: 4 }}
+            className="fm-btn-quiet flex h-7 w-7 items-center justify-center p-0"
+            style={{ borderRadius: 4 }}
           >
             <X className="h-4 w-4" />
           </button>
@@ -552,28 +548,21 @@ function DisconnectConfirmModal({
         {error && <p style={{ fontSize: 12, color: 'var(--fm-status-poor)' }}>{error}</p>}
 
         <div className="flex justify-end gap-2 pt-2">
-          <button type="button" onClick={onClose} className="btn-ghost">
-            Cancel
+          <button type="button" onClick={onClose} className="fm-btn-quiet">
+            <span>Cancel</span>
           </button>
           <button
             id="confirm-disconnect-btn"
             type="button"
             disabled={isPending}
             onClick={onConfirm}
+            className="fm-btn-destructive"
             style={{
-              background: 'var(--fm-status-poor)',
-              color: '#fff',
-              fontFamily: 'var(--font-ibm-plex-mono)',
               fontSize: 13,
               fontWeight: 500,
-              border: 'none',
-              borderRadius: 4,
-              padding: '7px 16px',
-              cursor: isPending ? 'not-allowed' : 'pointer',
-              opacity: isPending ? 0.5 : 1,
             }}
           >
-            {isPending ? 'Disconnecting...' : 'Disconnect'}
+            <span>{isPending ? 'Disconnecting...' : 'Disconnect'}</span>
           </button>
         </div>
       </DialogContent>
@@ -601,8 +590,8 @@ function RepoRowMenu({ onDisconnect }: { onDisconnect: () => void }) {
         type="button"
         aria-label="Row actions"
         onClick={(e) => { e.stopPropagation(); setOpen((v) => !v) }}
-        className="flex h-7 w-7 items-center justify-center transition-colors"
-        style={{ background: 'none', border: 'none', color: 'var(--fm-text-muted)', cursor: 'pointer', borderRadius: 4 }}
+        className="fm-btn-quiet flex h-7 w-7 items-center justify-center p-0"
+        style={{ borderRadius: 4 }}
       >
         <MoreHorizontal className="h-4 w-4" />
       </button>
@@ -618,17 +607,10 @@ function RepoRowMenu({ onDisconnect }: { onDisconnect: () => void }) {
           <button
             type="button"
             onClick={() => { setOpen(false); onDisconnect() }}
-            className="flex w-full items-center px-3 py-2 text-sm transition-colors"
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: 'var(--fm-status-poor)',
-              cursor: 'pointer',
-              fontFamily: 'var(--font-ibm-plex-sans)',
-              fontSize: 13,
-            }}
+            className="fm-btn-destructive flex w-full items-center px-3 py-2 text-sm justify-start"
+            style={{ border: 'none' }}
           >
-            Disconnect
+            <span>Disconnect</span>
           </button>
         </div>
       )}
@@ -990,10 +972,10 @@ export default function DashboardPage() {
             id="connect-repo-btn"
             type="button"
             onClick={() => setConnectOpen(true)}
-            className="btn-accent flex items-center gap-2"
+            className="fm-btn-accent flex items-center gap-2"
           >
             <Plus className="h-4 w-4" />
-            Connect repository
+            <span>Connect repository</span>
           </button>
         )}
       </div>
@@ -1034,10 +1016,10 @@ export default function DashboardPage() {
           <button
             type="button"
             onClick={() => setCreateOrgOpen(true)}
-            className="btn-accent flex items-center gap-2"
+            className="fm-btn-accent flex items-center gap-2"
           >
             <Plus className="h-4 w-4" />
-            Create organization
+            <span>Create organization</span>
           </button>
         </div>
       )}
@@ -1060,10 +1042,10 @@ export default function DashboardPage() {
                 id="empty-connect-repo-btn"
                 type="button"
                 onClick={() => setConnectOpen(true)}
-                className="btn-accent flex items-center gap-2"
+                className="fm-btn-accent flex items-center gap-2"
               >
                 <Plus className="h-4 w-4" />
-                Connect repository
+                <span>Connect repository</span>
               </button>
             </>
           ) : (

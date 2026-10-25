@@ -325,7 +325,7 @@ export function MembersTab() {
                           <td className="text-right pr-5">
                             {!isOrgOwner && !isCurrent ? (
                               <DropdownMenu>
-                                <DropdownMenuTrigger className="h-7 w-7 inline-flex items-center justify-center rounded-[2px] hover:bg-[var(--fm-surface)] text-[var(--fm-text-muted)] hover:text-[var(--fm-text)] cursor-pointer">
+                                <DropdownMenuTrigger className="h-7 w-7 inline-flex items-center justify-center rounded-[2px] fm-btn-quiet cursor-pointer">
                                   <MoreVertical className="h-3.5 w-3.5" />
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-48 bg-[var(--fm-surface-raised)] border border-[var(--fm-line)] rounded-[4px] p-1">
@@ -340,7 +340,7 @@ export function MembersTab() {
                                       })
                                     }
                                     disabled={member.role === 'admin' || changeRoleMutation.isPending}
-                                    className="cursor-pointer gap-2 font-mono text-xs rounded-[2px]"
+                                    className="cursor-pointer gap-2 font-mono text-xs rounded-[2px] fm-sidebar-link px-2 py-1.5"
                                   >
                                     <Shield className="h-3 w-3" />
                                     <span>Make admin</span>
@@ -353,7 +353,7 @@ export function MembersTab() {
                                       })
                                     }
                                     disabled={member.role === 'member' || changeRoleMutation.isPending}
-                                    className="cursor-pointer gap-2 font-mono text-xs rounded-[2px]"
+                                    className="cursor-pointer gap-2 font-mono text-xs rounded-[2px] fm-sidebar-link px-2 py-1.5"
                                   >
                                     <User className="h-3 w-3" />
                                     <span>Make member</span>
@@ -362,7 +362,7 @@ export function MembersTab() {
                                   <DropdownMenuItem
                                     onClick={() => removeMemberMutation.mutate(member.id)}
                                     disabled={removeMemberMutation.isPending}
-                                    className="cursor-pointer gap-2 font-mono text-xs text-[var(--fm-status-poor)] focus:text-[var(--fm-status-poor)] focus:bg-[var(--fm-status-poor)]/10 rounded-[2px]"
+                                    className="cursor-pointer gap-2 font-mono text-xs rounded-[2px] fm-btn-destructive px-2 py-1.5"
                                   >
                                     <Trash2 className="h-3 w-3" />
                                     <span>Remove from Org</span>

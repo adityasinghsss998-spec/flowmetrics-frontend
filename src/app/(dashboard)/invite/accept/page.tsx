@@ -79,9 +79,9 @@ function InviteAcceptContent() {
             <div className="pt-2 w-full">
               <Link
                 href={`/login?redirect=/invite/accept?token=${token || ''}`}
-                className="btn-accent w-full justify-center"
+                className="fm-btn-accent w-full justify-center"
               >
-                Log In to Accept
+                <span>Log In to Accept</span>
               </Link>
             </div>
           </div>
@@ -99,10 +99,10 @@ function InviteAcceptContent() {
             <div className="pt-2 w-full">
               <button
                 onClick={() => router.push('/dashboard')}
-                className="btn-accent w-full justify-center"
+                className="fm-btn-accent w-full justify-center flex items-center gap-1.5"
               >
-                Go to Dashboard
-                <ArrowRight className="h-4 w-4 ml-1.5" />
+                <span>Go to Dashboard</span>
+                <ArrowRight className="h-4 w-4" />
               </button>
             </div>
           </div>
@@ -118,9 +118,9 @@ function InviteAcceptContent() {
             <div className="pt-2 w-full flex gap-3">
               <Link
                 href="/dashboard"
-                className="flex-1 inline-flex items-center justify-center rounded-[4px] border border-[var(--fm-line)] bg-transparent hover:bg-[var(--fm-surface)] text-[var(--fm-text)] font-mono text-xs h-8 px-4"
+                className="fm-btn-quiet flex-1 inline-flex items-center justify-center text-xs h-8 px-4"
               >
-                Dashboard
+                <span>Dashboard</span>
               </Link>
               <Button
                 onClick={() => window.location.reload()}

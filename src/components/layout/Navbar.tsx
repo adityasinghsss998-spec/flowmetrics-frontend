@@ -50,8 +50,8 @@ export default function Navbar({ variant = 'landing', onMenuClick }: NavbarProps
             id="sidebar-mobile-toggle"
             aria-label="Toggle sidebar"
             onClick={onMenuClick}
-            className="inline-flex h-8 w-8 items-center justify-center transition-colors lg:hidden"
-            style={{ color: 'var(--fm-text-muted)', borderRadius: 4 }}
+            className="inline-flex h-8 w-8 items-center justify-center lg:hidden fm-btn-quiet"
+            style={{ borderRadius: 4, padding: 0 }}
           >
             <Menu className="h-5 w-5" />
           </button>
@@ -84,7 +84,7 @@ export default function Navbar({ variant = 'landing', onMenuClick }: NavbarProps
         {/* User avatar */}
         <DropdownMenu>
           <DropdownMenuTrigger
-            className="flex h-8 w-8 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2"
+            className="flex h-8 w-8 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 fm-btn-quiet"
             style={{
               background: 'var(--fm-surface-raised)',
               border: '1px solid var(--fm-line)',
@@ -92,14 +92,14 @@ export default function Navbar({ variant = 'landing', onMenuClick }: NavbarProps
               fontFamily: 'var(--font-ibm-plex-mono)',
               fontSize: 12,
               fontWeight: 600,
-              color: 'var(--fm-text)',
+              padding: 0,
             }}
           >
-            {user?.name?.[0]?.toUpperCase() ?? 'U'}
+            <span>{user?.name?.[0]?.toUpperCase() ?? 'U'}</span>
           </DropdownMenuTrigger>
           <DropdownMenuContent
             align="end"
-            className="w-52 mt-2"
+            className="w-52 mt-2 p-1"
             style={{
               background: 'var(--fm-surface-raised)',
               border: '1px solid var(--fm-line)',
@@ -117,18 +117,16 @@ export default function Navbar({ variant = 'landing', onMenuClick }: NavbarProps
             <DropdownMenuSeparator style={{ background: 'var(--fm-line)' }} />
             <DropdownMenuItem
               onClick={() => router.push('/settings')}
-              className="cursor-pointer text-sm"
-              style={{ color: 'var(--fm-text)' }}
+              className="cursor-pointer text-sm fm-sidebar-link px-3 py-1.5"
             >
-              Settings
+              <span>Settings</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator style={{ background: 'var(--fm-line)' }} />
             <DropdownMenuItem
               onClick={logout}
-              className="cursor-pointer text-sm"
-              style={{ color: 'var(--fm-status-poor)' }}
+              className="cursor-pointer text-sm fm-btn-destructive px-3 py-1.5"
             >
-              Log out
+              <span>Log out</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

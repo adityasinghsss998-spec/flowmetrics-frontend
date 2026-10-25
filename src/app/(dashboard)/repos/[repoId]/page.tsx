@@ -106,19 +106,15 @@ export default function RepoDashboardPage() {
             id="back-to-dashboard"
             type="button"
             onClick={() => router.push('/dashboard')}
-            className="flex items-center gap-1.5 text-sm transition-colors"
+            className="fm-btn-quiet flex items-center gap-1.5 text-sm"
             style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              fontFamily: 'var(--font-ibm-plex-mono)',
+              padding: '4px 10px',
               fontSize: 12,
-              color: 'var(--fm-text-muted)',
-              padding: 0,
+              borderRadius: 4,
             }}
           >
-            <ArrowLeft className="h-4 w-4" />
-            Dashboard
+            <ArrowLeft className="h-3.5 w-3.5" />
+            <span>Dashboard</span>
           </button>
           <span style={{ color: 'var(--fm-line)' }}>/</span>
           <h1
@@ -156,7 +152,7 @@ export default function RepoDashboardPage() {
             >
               <SelectTrigger
                 id="time-range-selector"
-                className="h-7 w-28 border-0 bg-transparent p-0 text-xs font-medium focus-visible:ring-0 shadow-none"
+                className="h-7 w-28 border-0 bg-transparent p-0 text-xs font-medium focus-visible:ring-0 shadow-none cursor-pointer"
                 style={{ fontFamily: 'var(--font-ibm-plex-mono)', fontSize: 12, color: 'var(--fm-text)' }}
               >
                 <SelectValue />
@@ -174,21 +170,13 @@ export default function RepoDashboardPage() {
           <button
             type="button"
             onClick={() => setConfirmOpen(true)}
+            className="fm-btn-destructive"
             style={{
-              background: 'color-mix(in srgb, var(--fm-status-poor) 12%, transparent)',
-              border: '1px solid color-mix(in srgb, var(--fm-status-poor) 30%, transparent)',
-              borderRadius: 4,
-              color: 'var(--fm-status-poor)',
-              fontFamily: 'var(--font-ibm-plex-mono)',
               fontSize: 12,
-              padding: '6px 14px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              padding: '5px 14px',
             }}
           >
-            Disconnect
+            <span>Disconnect</span>
           </button>
         </div>
       </div>
@@ -211,7 +199,8 @@ export default function RepoDashboardPage() {
             <button
               type="button"
               onClick={() => setConfirmOpen(false)}
-              style={{ background: 'none', border: 'none', color: 'var(--fm-text-muted)', cursor: 'pointer', borderRadius: 4 }}
+              className="fm-btn-quiet flex h-7 w-7 items-center justify-center p-0"
+              style={{ borderRadius: 4 }}
             >
               <X className="h-4 w-4" />
             </button>
@@ -220,27 +209,20 @@ export default function RepoDashboardPage() {
             Disconnect repository <strong style={{ color: 'var(--fm-text)' }}>#{repoId}</strong>? Webhook tracking will stop and you will be returned to the dashboard. Analytics data is preserved.
           </p>
           <div className="flex justify-end gap-2 pt-2">
-            <button type="button" onClick={() => setConfirmOpen(false)} className="btn-ghost">
-              Cancel
+            <button type="button" onClick={() => setConfirmOpen(false)} className="fm-btn-quiet">
+              <span>Cancel</span>
             </button>
             <button
               type="button"
               disabled={disconnectMutation.isPending}
               onClick={() => disconnectMutation.mutate()}
+              className="fm-btn-destructive"
               style={{
-                background: 'var(--fm-status-poor)',
-                color: '#fff',
-                fontFamily: 'var(--font-ibm-plex-mono)',
                 fontSize: 13,
                 fontWeight: 500,
-                border: 'none',
-                borderRadius: 4,
-                padding: '7px 16px',
-                cursor: disconnectMutation.isPending ? 'not-allowed' : 'pointer',
-                opacity: disconnectMutation.isPending ? 0.5 : 1,
               }}
             >
-              {disconnectMutation.isPending ? 'Disconnecting...' : 'Disconnect'}
+              <span>{disconnectMutation.isPending ? 'Disconnecting...' : 'Disconnect'}</span>
             </button>
           </div>
         </DialogContent>
