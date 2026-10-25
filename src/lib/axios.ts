@@ -85,7 +85,8 @@ api.interceptors.response.use(
           window.location.pathname !== '/login' &&
           window.location.pathname !== '/register'
         ) {
-          window.location.href = '/login?error=session_expired'
+          const currentPath = window.location.pathname + window.location.search
+          window.location.href = `/login?error=session_expired&redirect=${encodeURIComponent(currentPath)}`
         }
 
         return Promise.reject(error)

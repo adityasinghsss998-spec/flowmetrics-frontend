@@ -4,20 +4,21 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-[4px] border border-transparent font-mono text-sm font-medium whitespace-nowrap transition-colors outline-none select-none focus-visible:outline-2 focus-visible:outline-[var(--fm-accent)] focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "group/button inline-flex shrink-0 items-center justify-center rounded-[4px] font-mono text-sm font-medium whitespace-nowrap outline-none select-none focus-visible:outline-2 focus-visible:outline-[var(--fm-accent)] focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-[color-mix(in_srgb,var(--fm-accent)_88%,#fff)]",
-        outline:
-          "border-border bg-transparent text-foreground hover:bg-muted hover:text-foreground",
+        default: "fm-btn-accent",
+        accent: "fm-btn-accent",
+        outline: "fm-btn-quiet border border-border bg-transparent",
+        quiet: "fm-btn-quiet border border-border bg-transparent",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-[var(--fm-surface-raised)] border border-border",
+          "fm-btn-quiet bg-secondary border border-border",
         ghost:
-          "hover:bg-muted hover:text-foreground",
+          "fm-btn-quiet border-transparent bg-transparent",
         destructive:
           "bg-[var(--fm-status-poor)]/15 text-[var(--fm-status-poor)] border border-[var(--fm-status-poor)]/30 hover:bg-[var(--fm-status-poor)]/25",
-        link: "text-[var(--fm-accent)] underline-offset-4 hover:underline",
+        link: "fm-inline-link text-[var(--fm-accent)] underline-offset-4",
       },
       size: {
         default: "h-8 gap-1.5 px-3",
@@ -37,18 +38,28 @@ const buttonVariants = cva(
   }
 )
 
+interface ButtonProps extends ButtonPrimitive.Props, VariantProps<typeof buttonVariants> {
+  loading?: boolean
+}
+
 function Button({
   className,
   variant = "default",
   size = "default",
+  loading = false,
+  children,
   ...props
-}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
+}: ButtonProps) {
   return (
     <ButtonPrimitive
       data-slot="button"
+      aria-busy={loading ? "true" : undefined}
+      disabled={props.disabled || loading}
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
-    />
+    >
+      <span>{children}</span>
+    </ButtonPrimitive>
   )
 }
 

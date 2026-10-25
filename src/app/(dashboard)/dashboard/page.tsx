@@ -350,7 +350,7 @@ function ConnectModal({
   return (
     <Dialog open={open} onOpenChange={(val) => { if (!val) onClose() }}>
       <DialogContent
-        className="sm:max-w-2xl w-[95vw] p-0 overflow-hidden"
+        className="flex flex-col w-full max-w-[calc(100vw-2rem)] sm:max-w-2xl p-0 overflow-hidden"
         showCloseButton={false}
         style={{
           background: 'var(--fm-surface-raised)',
@@ -359,7 +359,7 @@ function ConnectModal({
         }}
       >
         <div
-          className="flex items-center justify-between px-5 py-4"
+          className="flex items-center justify-between px-5 py-4 shrink-0"
           style={{ borderBottom: '1px solid var(--fm-line)' }}
         >
           <span
@@ -381,7 +381,7 @@ function ConnectModal({
           </button>
         </div>
 
-        <div className="p-5 space-y-4">
+        <div className="p-5 space-y-4 w-full min-w-0">
           {showGithubConnect ? (
             <div
               className="p-6 text-center space-y-3"
@@ -428,7 +428,7 @@ function ConnectModal({
               </div>
             </div>
           ) : (
-            <div className="flex flex-col gap-2 max-h-[60vh] overflow-y-auto pr-1">
+            <div className="flex flex-col gap-2 max-h-[60vh] overflow-y-auto overflow-x-hidden pr-1 w-full min-w-0">
               {isLoadingRepos && (
                 <div className="space-y-2">
                   {[1, 2, 3].map((i) => (
@@ -449,22 +449,27 @@ function ConnectModal({
               {availableRepos.map((repo) => (
                 <div
                   key={repo.github_repo_id}
-                  className="flex items-center justify-between gap-4 p-3"
+                  className="flex items-center justify-between gap-3 p-3 w-full min-w-0"
                   style={{
                     background: 'var(--fm-surface)',
                     border: '1px solid var(--fm-line)',
                     borderRadius: 4,
                   }}
                 >
-                  <div className="min-w-0">
+                  <div className="flex-1 min-w-0 pr-1">
                     <div
                       className="font-medium text-sm truncate"
                       style={{ fontFamily: 'var(--font-ibm-plex-mono)', color: 'var(--fm-text)' }}
+                      title={repo.full_name}
                     >
                       {repo.full_name}
                     </div>
                     {repo.description && (
-                      <div className="text-xs truncate" style={{ color: 'var(--fm-text-muted)', marginTop: 2 }}>
+                      <div
+                        className="text-xs truncate block"
+                        style={{ color: 'var(--fm-text-muted)', marginTop: 2 }}
+                        title={repo.description}
+                      >
                         {repo.description}
                       </div>
                     )}
@@ -473,7 +478,7 @@ function ConnectModal({
                     id={`connect-${repo.github_repo_id}`}
                     disabled={isPending && connectingRepo === repo.full_name}
                     onClick={() => onConnect(repo.full_name)}
-                    className="btn-accent shrink-0"
+                    className="btn-accent shrink-0 whitespace-nowrap"
                     style={{ fontSize: 12, padding: '6px 14px' }}
                   >
                     {isPending && connectingRepo === repo.full_name ? 'Connecting...' : 'Connect'}

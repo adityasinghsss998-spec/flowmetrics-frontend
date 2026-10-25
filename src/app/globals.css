@@ -177,52 +177,309 @@ html {
     box-shadow: 0 1px 0 0 var(--fm-accent);
   }
 
-  /* Focus ring — accent color */
+  /* ─────────────────────────────────────────────────────────────
+     Shared Hover and Press (Wipe from Left to Right)
+     Follows Motion section 5 of DESIGN-BRIEF.md
+  ───────────────────────────────────────────────────────────── */
+
+  /* Focus ring base */
   :focus-visible {
     outline: 2px solid var(--fm-accent);
     outline-offset: 2px;
   }
 
-  /* Accent primary button override */
+  /* 1. Accent Button (.fm-btn-accent, .btn-accent) */
+  .fm-btn-accent,
   .btn-accent {
+    position: relative;
+    overflow: hidden;
+    border-radius: 4px;
     background-color: var(--fm-accent);
     color: var(--fm-on-accent);
     font-family: var(--font-ibm-plex-mono), monospace;
     font-size: 14px;
     font-weight: 500;
-    border-radius: 4px;
-    border: none;
-    padding: 8px 20px;
-    cursor: pointer;
-    transition: background-color 150ms ease-out;
+    isolation: isolate;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
+    padding: 8px 20px;
     gap: 8px;
     white-space: nowrap;
+    border: none;
+    cursor: pointer;
+    transition: transform 100ms ease-out;
+    text-decoration: none;
   }
-  .btn-accent:hover {
-    background-color: color-mix(in srgb, var(--fm-accent) 88%, #fff);
-  }
-  .btn-accent:disabled {
-    opacity: 0.5;
+
+  .fm-btn-accent::before,
+  .btn-accent::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-color: var(--fm-text); /* #ECEEE6 */
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+    z-index: 0;
     pointer-events: none;
   }
 
-  /* Ghost button */
-  .btn-ghost {
+  .fm-btn-accent > *,
+  .btn-accent > * {
+    position: relative;
+    z-index: 1;
+    color: var(--fm-on-accent);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .fm-btn-accent:not(:disabled):not([aria-busy="true"]):hover::before,
+    .fm-btn-accent:not(:disabled):not([aria-busy="true"]):focus-visible::before,
+    .btn-accent:not(:disabled):not([aria-busy="true"]):hover::before,
+    .btn-accent:not(:disabled):not([aria-busy="true"]):focus-visible::before {
+      transform: scaleX(1);
+      transform-origin: left;
+    }
+  }
+
+  .fm-btn-accent:not(:disabled):not([aria-busy="true"]):active,
+  .btn-accent:not(:disabled):not([aria-busy="true"]):active {
+    transform: scale(0.98);
+    transition: transform 100ms ease-out;
+  }
+
+  .fm-btn-accent:disabled,
+  .fm-btn-accent[aria-busy="true"],
+  .btn-accent:disabled,
+  .btn-accent[aria-busy="true"] {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  .fm-btn-accent:disabled::before,
+  .fm-btn-accent[aria-busy="true"]::before,
+  .btn-accent:disabled::before,
+  .btn-accent[aria-busy="true"]::before {
+    display: none !important;
+  }
+
+  /* 2. Quiet Button, Nav Link, Wordmark Link (.fm-btn-quiet, .btn-ghost, .fm-nav-link, .fm-wordmark-link) */
+  .fm-btn-quiet,
+  .btn-ghost,
+  .fm-nav-link,
+  .fm-wordmark-link {
+    position: relative;
+    overflow: hidden;
+    border-radius: 4px;
     background: transparent;
-    color: var(--fm-text-muted);
+    color: var(--fm-text);
     font-family: var(--font-ibm-plex-mono), monospace;
     font-size: 13px;
-    border: 1px solid var(--fm-line);
-    border-radius: 4px;
-    padding: 6px 16px;
+    font-weight: 400;
+    isolation: isolate;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-    transition: color 150ms, border-color 150ms;
+    text-decoration: none;
+    transition: color 200ms cubic-bezier(0.22, 1, 0.36, 1), transform 100ms ease-out;
   }
-  .btn-ghost:hover {
-    color: var(--fm-text);
-    border-color: var(--fm-text-muted);
+
+  .fm-btn-quiet,
+  .btn-ghost {
+    border: 1px solid var(--fm-line);
+    padding: 6px 16px;
+  }
+
+  .fm-btn-quiet::before,
+  .btn-ghost::before,
+  .fm-nav-link::before,
+  .fm-wordmark-link::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-color: var(--fm-accent); /* #FF5C3A */
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .fm-btn-quiet > *,
+  .btn-ghost > *,
+  .fm-nav-link > *,
+  .fm-wordmark-link > * {
+    position: relative;
+    z-index: 1;
+    transition: color 200ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .fm-btn-quiet:not(:disabled):not([aria-busy="true"]):hover,
+    .fm-btn-quiet:not(:disabled):not([aria-busy="true"]):focus-visible,
+    .btn-ghost:not(:disabled):not([aria-busy="true"]):hover,
+    .btn-ghost:not(:disabled):not([aria-busy="true"]):focus-visible,
+    .fm-nav-link:hover,
+    .fm-nav-link:focus-visible,
+    .fm-wordmark-link:hover,
+    .fm-wordmark-link:focus-visible {
+      color: var(--fm-on-accent) !important;
+    }
+
+    .fm-btn-quiet:not(:disabled):not([aria-busy="true"]):hover > *,
+    .fm-btn-quiet:not(:disabled):not([aria-busy="true"]):focus-visible > *,
+    .btn-ghost:not(:disabled):not([aria-busy="true"]):hover > *,
+    .btn-ghost:not(:disabled):not([aria-busy="true"]):focus-visible > *,
+    .fm-nav-link:hover > *,
+    .fm-nav-link:focus-visible > *,
+    .fm-wordmark-link:hover > *,
+    .fm-wordmark-link:focus-visible > * {
+      color: var(--fm-on-accent) !important;
+    }
+
+    .fm-btn-quiet:not(:disabled):not([aria-busy="true"]):hover::before,
+    .fm-btn-quiet:not(:disabled):not([aria-busy="true"]):focus-visible::before,
+    .btn-ghost:not(:disabled):not([aria-busy="true"]):hover::before,
+    .btn-ghost:not(:disabled):not([aria-busy="true"]):focus-visible::before,
+    .fm-nav-link:hover::before,
+    .fm-nav-link:focus-visible::before,
+    .fm-wordmark-link:hover::before,
+    .fm-wordmark-link:focus-visible::before {
+      transform: scaleX(1);
+      transform-origin: left;
+    }
+  }
+
+  .fm-btn-quiet:not(:disabled):not([aria-busy="true"]):active,
+  .btn-ghost:not(:disabled):not([aria-busy="true"]):active,
+  .fm-nav-link:active,
+  .fm-wordmark-link:active {
+    transform: scale(0.98);
+    transition: transform 100ms ease-out;
+  }
+
+  .fm-btn-quiet:disabled,
+  .fm-btn-quiet[aria-busy="true"],
+  .btn-ghost:disabled,
+  .btn-ghost[aria-busy="true"] {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  .fm-btn-quiet:disabled::before,
+  .fm-btn-quiet[aria-busy="true"]::before,
+  .btn-ghost:disabled::before,
+  .btn-ghost[aria-busy="true"]::before {
+    display: none !important;
+  }
+
+  /* 3. Inline Text Links (.fm-inline-link) */
+  .fm-inline-link {
+    position: relative;
+    text-decoration: none;
+    color: var(--fm-text-muted);
+    display: inline-block;
+    cursor: pointer;
+    transition: color 200ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .fm-inline-link::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 1px;
+    background-color: var(--fm-accent);
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .fm-inline-link:hover,
+    .fm-inline-link:focus-visible {
+      color: var(--fm-text);
+    }
+
+    .fm-inline-link:hover::after,
+    .fm-inline-link:focus-visible::after {
+      transform: scaleX(1);
+      transform-origin: left;
+    }
+  }
+
+  /* 4. Prefers Reduced Motion */
+  @media (prefers-reduced-motion: reduce) {
+    .fm-btn-accent,
+    .btn-accent,
+    .fm-btn-quiet,
+    .btn-ghost,
+    .fm-nav-link,
+    .fm-wordmark-link,
+    .fm-inline-link {
+      transition: none !important;
+    }
+
+    .fm-btn-accent::before,
+    .btn-accent::before,
+    .fm-btn-quiet::before,
+    .btn-ghost::before,
+    .fm-nav-link::before,
+    .fm-wordmark-link::before,
+    .fm-inline-link::after {
+      display: none !important;
+    }
+
+    .fm-btn-accent:hover,
+    .fm-btn-accent:focus-visible,
+    .btn-accent:hover,
+    .btn-accent:focus-visible {
+      background-color: var(--fm-text) !important;
+      color: var(--fm-on-accent) !important;
+    }
+
+    .fm-btn-quiet:hover,
+    .fm-btn-quiet:focus-visible,
+    .btn-ghost:hover,
+    .btn-ghost:focus-visible,
+    .fm-nav-link:hover,
+    .fm-nav-link:focus-visible,
+    .fm-wordmark-link:hover,
+    .fm-wordmark-link:focus-visible {
+      background-color: var(--fm-accent) !important;
+      color: var(--fm-on-accent) !important;
+    }
+
+    .fm-btn-quiet:hover > *,
+    .fm-btn-quiet:focus-visible > *,
+    .btn-ghost:hover > *,
+    .btn-ghost:focus-visible > *,
+    .fm-nav-link:hover > *,
+    .fm-nav-link:focus-visible > *,
+    .fm-wordmark-link:hover > *,
+    .fm-wordmark-link:focus-visible > * {
+      color: var(--fm-on-accent) !important;
+    }
+
+    .fm-inline-link:hover,
+    .fm-inline-link:focus-visible {
+      text-decoration: underline !important;
+      text-decoration-color: var(--fm-accent) !important;
+    }
+
+    .fm-btn-accent:active,
+    .btn-accent:active,
+    .fm-btn-quiet:active,
+    .btn-ghost:active,
+    .fm-nav-link:active,
+    .fm-wordmark-link:active {
+      transform: none !important;
+    }
   }
 
   /* Skeleton animation */

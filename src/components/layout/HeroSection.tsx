@@ -1,188 +1,322 @@
 'use client'
 
-import { useRef } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { useGSAP } from '@gsap/react'
-import { ScrollProgressProvider, useScrollProgress } from '@/context/ScrollProgressContext'
-import HeroCanvas from '@/components/three/HeroCanvas'
-import FlowMetricsLogo from '@/components/ui/FlowMetricsLogo'
 
 gsap.registerPlugin(ScrollTrigger, useGSAP)
 
-function ScrollDriver() {
-  const pinRef = useRef<HTMLDivElement>(null)
-  const leftRef = useRef<HTMLDivElement>(null)
-  const rightRef = useRef<HTMLDivElement>(null)
-  const ctaRef = useRef<HTMLDivElement>(null)
-  const scrollHintRef = useRef<HTMLDivElement>(null)
-  const progress = useScrollProgress()
+/* ─── Typing reveal helpers ─────────────────────────────────── */
 
-  useGSAP(() => {
-    const el = pinRef.current
-    if (!el) return
-    const proxy = { value: 0 }
-    const tl = gsap.timeline({
-      scrollTrigger: {
-        trigger: el,
-        start: 'top top',
-        end: '+=200vh',
-        scrub: 1.5,
-        pin: true,
-        pinSpacing: true,
-        anticipatePin: 1,
-      },
-    })
-    tl.to(proxy, { value: 1, ease: 'none', onUpdate() { progress.current = proxy.value } }, 0)
-    if (leftRef.current) {
-      tl.fromTo(leftRef.current.querySelectorAll('.spec-item'),
-        { autoAlpha: 0, x: -28 },
-        { autoAlpha: 1, x: 0, stagger: 0.14, ease: 'power2.out', duration: 0.45 }, 0.22)
-    }
-    if (rightRef.current) {
-      tl.fromTo(rightRef.current.querySelectorAll('.spec-item'),
-        { autoAlpha: 0, x: 28 },
-        { autoAlpha: 1, x: 0, stagger: 0.14, ease: 'power2.out', duration: 0.45 }, 0.42)
-    }
-    if (ctaRef.current) {
-      tl.fromTo(ctaRef.current,
-        { autoAlpha: 0, y: 12 },
-        { autoAlpha: 1, y: 0, ease: 'power2.out', duration: 0.35 }, 0.72)
-    }
-    if (scrollHintRef.current) {
-      tl.to(scrollHintRef.current, { autoAlpha: 0, duration: 0.2 }, 0.05)
-    }
-  }, { scope: pinRef })
-
+/**
+ * Splits text into words wrapped in whitespace-nowrap spans,
+ * with character spans inside, so lines can only break between words.
+ */
+function TypingHeadline({ text }: { text: string }) {
+  const words = text.split(' ')
   return (
-    <div ref={pinRef} className="relative w-full h-screen overflow-hidden bg-[#050510]">
-
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_90%_60%_at_55%_40%,rgba(99,102,241,0.1),transparent)] pointer-events-none" />
-
-      {/* Macro background type */}
-      <div className="absolute top-0 left-0 z-0 pointer-events-none select-none overflow-hidden">
-        <p className="font-black leading-[0.82] tracking-tighter whitespace-nowrap"
-          style={{ fontSize: 'clamp(10rem, 28vw, 30rem)', color: 'rgba(255,255,255,0.028)' }}>
-          FLOW
-        </p>
-      </div>
-      <div className="absolute bottom-0 right-0 z-0 pointer-events-none select-none overflow-hidden">
-        <p className="font-black leading-[0.82] tracking-tighter whitespace-nowrap"
-          style={{ fontSize: 'clamp(6rem, 15vw, 18rem)', color: 'rgba(255,255,255,0.022)' }}>
-          METRICS
-        </p>
-      </div>
-
-      {/* Nav — bigger, more visible */}
-      <nav className="absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-8 py-5">
-        <Link href="/">
-          <FlowMetricsLogo size="sm" />
-        </Link>
-        <div className="hidden md:flex items-center gap-8 bg-white/5 backdrop-blur-md border border-white/10 rounded-full px-6 py-2.5">
-          {['Features', 'How It Works', 'Pricing'].map(label => (
-            <Link
-              key={label}
-              href={`#${label.toLowerCase().replace(/\s+/g, '-')}`}
-              className="text-sm font-medium text-white/60 hover:text-white transition-colors"
+    <span aria-hidden="true">
+      {words.map((word, wi) => (
+        <span key={wi} className="inline-block whitespace-nowrap" style={{ whiteSpace: 'nowrap' }}>
+          {word.split('').map((char, ci) => (
+            <span
+              key={ci}
+              data-char
+              style={{ opacity: 0 }}
+              className="inline-block"
             >
-              {label}
-            </Link>
+              {char}
+            </span>
           ))}
-          <Link href="/login" className="text-sm font-medium text-white/60 hover:text-white transition-colors">
-            Login
-          </Link>
-        </div>
-        <Link
-          href="/register"
-          className="group relative flex items-center gap-2 rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 transition-all hover:-translate-y-px"
-        >
-          Get Started
-          <span className="transition-transform group-hover:translate-x-0.5 inline-block">→</span>
-        </Link>
-      </nav>
-
-      {/* Metadata */}
-      <div className="absolute top-20 left-8 z-30">
-        <p className="text-[9px] font-mono uppercase tracking-[0.28em] text-white/25">Engineering Platform</p>
-        <p className="text-[9px] font-mono uppercase tracking-[0.28em] text-white/25 mt-0.5">Release 2026</p>
-      </div>
-
-      {/* 3D Canvas */}
-      <div className="absolute inset-0 z-10">
-        <HeroCanvas />
-      </div>
-
-      {/* Left spec labels */}
-      <div ref={leftRef} className="absolute left-6 top-1/2 -translate-y-1/2 z-20 space-y-8">
-        <div className="spec-item pl-3 border-l-2 border-indigo-400/70">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-indigo-400 animate-pulse" />
-            <p className="text-[9px] font-mono uppercase tracking-[0.3em] text-indigo-400/80">01 / Layer</p>
-          </div>
-          <p className="text-base font-bold tracking-wide uppercase text-white">DORA</p>
-          <p className="text-xs mt-1 leading-relaxed max-w-[150px] text-slate-400">Deploy Freq & MTTR</p>
-        </div>
-        <div className="spec-item pl-3 border-l-2 border-violet-400/70">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-violet-400 animate-pulse" style={{ animationDelay: '0.5s' }} />
-            <p className="text-[9px] font-mono uppercase tracking-[0.3em] text-violet-400/80">02 / Layer</p>
-          </div>
-          <p className="text-base font-bold tracking-wide uppercase text-white">Cycle Time</p>
-          <p className="text-xs mt-1 leading-relaxed max-w-[150px] text-slate-400">Lead Time for Changes</p>
-        </div>
-      </div>
-
-      {/* Right spec labels */}
-      <div ref={rightRef} className="absolute right-6 top-1/2 -translate-y-1/2 z-20 space-y-8 text-right">
-        <div className="spec-item pr-3 border-r-2 border-cyan-400/70">
-          <div className="flex items-center justify-end gap-2 mb-1">
-            <p className="text-[9px] font-mono uppercase tracking-[0.3em] text-cyan-400/80">03 / Layer</p>
-            <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" style={{ animationDelay: '1s' }} />
-          </div>
-          <p className="text-base font-bold tracking-wide uppercase text-white">Live Events</p>
-          <p className="text-xs mt-1 leading-relaxed max-w-[150px] ml-auto text-slate-400">Real-Time WebSocket Feed</p>
-        </div>
-        <div className="spec-item pr-3 border-r-2 border-emerald-400/70">
-          <div className="flex items-center justify-end gap-2 mb-1">
-            <p className="text-[9px] font-mono uppercase tracking-[0.3em] text-emerald-400/80">04 / Layer</p>
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" style={{ animationDelay: '1.5s' }} />
-          </div>
-          <p className="text-base font-bold tracking-wide uppercase text-white">Analytics</p>
-          <p className="text-xs mt-1 leading-relaxed max-w-[150px] ml-auto text-slate-400">Contributor Intelligence</p>
-        </div>
-      </div>
-
-      {/* Scroll hint — visible at load, fades away on first scroll */}
-      <div ref={scrollHintRef} className="absolute bottom-8 left-0 right-0 z-30 flex flex-col items-center gap-2">
-        <p className="text-xs text-white/40 tracking-widest uppercase font-mono">Scroll to explore</p>
-        <div className="flex flex-col items-center gap-1 animate-bounce">
-          <div className="h-6 w-4 rounded-full border border-white/20 flex items-start justify-center pt-1">
-            <div className="h-1.5 w-0.5 rounded-full bg-white/40" />
-          </div>
-        </div>
-      </div>
-
-      {/* End-of-scroll CTA */}
-      <div ref={ctaRef} className="absolute bottom-8 left-0 right-0 z-30 flex flex-col items-center gap-4 opacity-0 invisible">
-        <Link
-          href="/register"
-          className="group flex items-center gap-2 rounded-full bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500 px-8 py-3.5 text-sm font-bold text-white shadow-xl shadow-indigo-500/30 hover:shadow-indigo-500/50 transition-all hover:-translate-y-0.5"
-        >
-          Start for Free
-          <span className="transition-transform group-hover:translate-x-0.5 inline-block">→</span>
-        </Link>
-        <p className="text-[10px] text-white/30 font-mono uppercase tracking-widest">Free for teams under 10 · No card required</p>
-      </div>
-
-    </div>
+          {wi < words.length - 1 && (
+            <span
+              data-char
+              style={{ opacity: 0 }}
+              className="inline-block whitespace-pre"
+            >
+              {' '}
+            </span>
+          )}
+        </span>
+      ))}
+    </span>
   )
 }
 
-export default function HeroSection() {
+/* ─── Nav pill (fixed, small corner radius) ─────────────────── */
+
+export function LandingNav() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  const handleSmoothScroll = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    e.preventDefault()
+    setMobileMenuOpen(false)
+    const target = document.getElementById(id)
+    if (!target) return
+    const offset = 80
+    const top = target.getBoundingClientRect().top + window.scrollY - offset
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    window.scrollTo({
+      top,
+      behavior: reduced ? 'instant' : 'smooth',
+    })
+  }
+
   return (
-    <ScrollProgressProvider>
-      <ScrollDriver />
-    </ScrollProgressProvider>
+    <nav
+      className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center px-4 py-4"
+      aria-label="Site navigation"
+    >
+      {/* The pill: 4px corner radius matching reference */}
+      <div
+        className="relative flex items-center rounded-[4px] border border-[var(--fm-line)]"
+        style={{ background: 'var(--fm-surface)' }}
+      >
+        {/* Wordmark */}
+        <Link
+          href="/"
+          className="fm-wordmark-link px-4 py-2 font-mono text-sm font-semibold tracking-tight"
+          aria-label="FlowMetrics home"
+        >
+          <span>flowmetrics</span>
+        </Link>
+
+        {/* Separator */}
+        <span
+          className="h-4 w-px bg-[var(--fm-line)]"
+          aria-hidden="true"
+        />
+
+        {/* Desktop nav links */}
+        <div className="hidden md:flex items-center">
+          <a
+            href="#features"
+            onClick={(e) => handleSmoothScroll(e, 'features')}
+            className="fm-nav-link px-3.5 py-2 font-mono text-sm text-[var(--fm-text-muted)]"
+          >
+            <span>Features</span>
+          </a>
+          <a
+            href="#how-it-works"
+            onClick={(e) => handleSmoothScroll(e, 'how-it-works')}
+            className="fm-nav-link px-3.5 py-2 font-mono text-sm text-[var(--fm-text-muted)]"
+          >
+            <span>How it works</span>
+          </a>
+          <Link
+            href="/login"
+            className="fm-nav-link px-3.5 py-2 font-mono text-sm text-[var(--fm-text-muted)]"
+          >
+            <span>Sign in</span>
+          </Link>
+        </div>
+
+        {/* Mobile menu toggle text button (no hamburger icon) */}
+        <button
+          type="button"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="md:hidden fm-btn-quiet px-3 py-2 font-mono text-xs text-[var(--fm-text-muted)] border-0"
+          aria-expanded={mobileMenuOpen}
+          aria-label="Toggle navigation menu"
+        >
+          <span>{mobileMenuOpen ? 'Close' : 'Menu'}</span>
+        </button>
+
+        {/* Primary button — attached flush to right end with matching corner radius */}
+        <Link
+          href="/register"
+          className="fm-btn-accent rounded-l-none rounded-r-[3px] px-4 py-2 text-xs md:text-sm whitespace-nowrap"
+        >
+          <span>Continue with GitHub</span>
+        </Link>
+      </div>
+
+      {/* Mobile dropdown panel */}
+      {mobileMenuOpen && (
+        <div
+          className="absolute top-16 inset-x-4 md:hidden rounded-[4px] border border-[var(--fm-line)] p-4 flex flex-col gap-2 z-50"
+          style={{ background: 'var(--fm-surface-raised)' }}
+        >
+          <a
+            href="#features"
+            onClick={(e) => handleSmoothScroll(e, 'features')}
+            className="fm-nav-link px-3 py-2 font-mono text-sm justify-start text-[var(--fm-text)]"
+          >
+            <span>Features</span>
+          </a>
+          <a
+            href="#how-it-works"
+            onClick={(e) => handleSmoothScroll(e, 'how-it-works')}
+            className="fm-nav-link px-3 py-2 font-mono text-sm justify-start text-[var(--fm-text)]"
+          >
+            <span>How it works</span>
+          </a>
+          <Link
+            href="/login"
+            onClick={() => setMobileMenuOpen(false)}
+            className="fm-nav-link px-3 py-2 font-mono text-sm justify-start text-[var(--fm-text)]"
+          >
+            <span>Sign in</span>
+          </Link>
+        </div>
+      )}
+    </nav>
+  )
+}
+
+/* ─── Hero section ──────────────────────────────────────────── */
+
+const HEADLINE_TEXT = 'SEE HOW FAST YOUR TEAM SHIPS.'
+const HEADLINE_DELAY_MS = 24 // ms between characters
+
+export default function HeroSection() {
+  const sectionRef = useRef<HTMLElement>(null)
+  const headlineRef = useRef<HTMLHeadingElement>(null)
+  const afterRef = useRef<HTMLDivElement>(null)
+  const imageRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const el = headlineRef.current
+    const afterEl = afterRef.current
+    const imgEl = imageRef.current
+    if (!el || !afterEl || !imgEl) return
+
+    // Respect reduced motion
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (reduced) {
+      el.querySelectorAll<HTMLElement>('[data-char]').forEach((s) => {
+        s.style.opacity = '1'
+      })
+      afterEl.style.opacity = '1'
+      imgEl.style.opacity = '1'
+      imgEl.style.transform = 'translateY(0)'
+      return
+    }
+
+    const chars = Array.from(el.querySelectorAll<HTMLElement>('[data-char]'))
+    const totalMs = chars.length * HEADLINE_DELAY_MS
+
+    const runReveal = () => {
+      chars.forEach((span, i) => {
+        gsap.to(span, {
+          opacity: 1,
+          duration: 0.01,
+          delay: (i * HEADLINE_DELAY_MS) / 1000,
+          ease: 'none',
+        })
+      })
+
+      // After headline: fade in subtitle/buttons + image rises 8px
+      gsap.fromTo(
+        afterEl,
+        { opacity: 0 },
+        { opacity: 1, duration: 0.2, ease: 'power2.out', delay: totalMs / 1000 }
+      )
+      gsap.fromTo(
+        imgEl,
+        { opacity: 0, y: 8 },
+        { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out', delay: totalMs / 1000 + 0.1 }
+      )
+    }
+
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(runReveal)
+    } else {
+      runReveal()
+    }
+  }, [])
+
+  const handleSmoothScroll = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    e.preventDefault()
+    const target = document.getElementById(id)
+    if (!target) return
+    const offset = 80
+    const top = target.getBoundingClientRect().top + window.scrollY - offset
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    window.scrollTo({
+      top,
+      behavior: reduced ? 'instant' : 'smooth',
+    })
+  }
+
+  return (
+    <section
+      ref={sectionRef}
+      id="hero"
+      className="relative min-h-screen flex flex-col items-start justify-center"
+      style={{
+        background: 'var(--fm-bg)',
+        paddingTop: '120px',
+        paddingLeft: 'max(24px, calc((100vw - 1120px) / 2))',
+        paddingRight: 'max(24px, calc((100vw - 1120px) / 2))',
+        paddingBottom: '80px',
+      }}
+    >
+      {/* Headline: words never break mid-word, lines break only between words */}
+      <h1
+        ref={headlineRef}
+        aria-label={HEADLINE_TEXT}
+        className="font-mono font-bold leading-[1.05] uppercase tracking-tight"
+        style={{
+          fontSize: 'clamp(2.5rem, 6vw, 5.5rem)',
+          color: 'var(--fm-text)',
+          maxWidth: '850px',
+        }}
+      >
+        <TypingHeadline text={HEADLINE_TEXT} />
+      </h1>
+
+      {/* Subtitle, buttons, free label: no em dash in copy */}
+      <div ref={afterRef} style={{ opacity: 0 }}>
+        <p
+          className="mt-6 max-w-[56ch] text-base leading-relaxed"
+          style={{ color: 'var(--fm-text-muted)', fontFamily: 'var(--font-ibm-plex-sans)' }}
+        >
+          FlowMetrics measures deployment frequency, lead time for changes,
+          change failure rate and time to restore, the four DORA metrics
+          engineering teams use to understand delivery health.
+        </p>
+
+        <div className="mt-8 flex flex-wrap items-center gap-4">
+          <Link href="/register" className="fm-btn-accent px-5 py-2.5 text-sm">
+            <span>Continue with GitHub</span>
+          </Link>
+          <a
+            href="#features"
+            onClick={(e) => handleSmoothScroll(e, 'features')}
+            className="fm-inline-link font-mono text-sm underline-offset-4"
+          >
+            See what it tracks
+          </a>
+        </div>
+
+        <p
+          className="mt-4 font-mono text-xs"
+          style={{ color: 'var(--fm-text-muted)' }}
+        >
+          Free to use.
+        </p>
+      </div>
+
+      {/* Hero dashboard image: 1px line border, no glow, no shadow */}
+      <div
+        ref={imageRef}
+        className="mt-16 w-full"
+        style={{ opacity: 0, maxWidth: '1120px' }}
+      >
+        <Image
+          src="/screenshot-dashboard.png"
+          alt="FlowMetrics dashboard showing connected repositories and deployment status"
+          width={1456}
+          height={816}
+          priority
+          className="w-full rounded-[4px]"
+          style={{ border: '1px solid var(--fm-line)' }}
+        />
+      </div>
+    </section>
   )
 }

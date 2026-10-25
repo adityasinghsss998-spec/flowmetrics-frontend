@@ -25,8 +25,16 @@ export const metadata: Metadata = {
   keywords: ['DORA metrics', 'developer analytics', 'engineering metrics', 'GitHub analytics'],
   openGraph: {
     title: 'FlowMetrics: DORA metrics for engineering teams',
-    description: 'Real-time DORA metrics and contributor insights.',
+    description: 'Real-time DORA metrics, cycle time trends, and contributor insights from GitHub.',
     type: 'website',
+    images: [
+      {
+        url: '/screenshot-dashboard.png',
+        width: 1456,
+        height: 816,
+        alt: 'FlowMetrics dashboard preview',
+      },
+    ],
   },
 }
 
@@ -38,12 +46,20 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${ibmPlexMono.variable} ${ibmPlexSans.variable}`}
+      className={`dark ${ibmPlexMono.variable} ${ibmPlexSans.variable}`}
       suppressHydrationWarning
     >
       <body className="min-h-screen bg-[#0B0C0A] text-[#ECEEE6] antialiased">
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-[var(--fm-accent)] focus:text-[var(--fm-on-accent)] focus:font-mono focus:text-sm focus:rounded-[4px] focus:outline-none"
+        >
+          Skip to content
+        </a>
         <Providers>
-          <LenisProvider>{children}</LenisProvider>
+          <LenisProvider>
+            <div id="main-content">{children}</div>
+          </LenisProvider>
         </Providers>
       </body>
     </html>

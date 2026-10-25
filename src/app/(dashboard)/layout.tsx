@@ -27,7 +27,9 @@ export default function DashboardLayout({
     setMounted(true)
     const token = localStorage.getItem('accessToken')
     if (!isAuthenticated && !token) {
-      router.replace('/login')
+      const currentPath = window.location.pathname + window.location.search
+      const returnUrl = currentPath && currentPath !== '/login' ? `?redirect=${encodeURIComponent(currentPath)}` : ''
+      router.replace(`/login${returnUrl}`)
     } else {
       fetchMe()
     }

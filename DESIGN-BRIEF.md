@@ -76,7 +76,7 @@ Motion is the main feature of the landing page, so it must be exact. The owner l
 General rules:
 - Animate transform and opacity only. Never animate width, height, top, left or margins.
 - Scroll-linked motion maps directly to scroll position (linear). Time-based motion uses ease-out and finishes in under 200 ms for UI, longer only for the hero text.
-- Nothing loops. Nothing moves on hover except a color change. No animated arrows.
+- Nothing loops. The only hover animation is the left-to-right color fill in section 5. No animated arrows.
 - Only two things use text reveal: the hero headline and each section title. All other text is static.
 - Everything honors prefers-reduced-motion (see the end of this section).
 
@@ -106,6 +106,21 @@ This is the main scene, directly below the hero.
 ### 4. Navigation
 
 - A dark pill (surface color) holds the links, and the primary button sits flush against its right end. On scroll the pill stays fixed at the top. No shrinking, no blur, no transparency effects.
+
+### 5. Hover and press (the only hover animation)
+
+The owner likes how Render's buttons fill with color from the left on hover. Build one shared version and use it everywhere. Do not write it again per component.
+
+- Buttons with the accent background: on hover a fill in the text color (#ECEEE6) wipes in from the left edge to the right edge. The label stays dark (on-accent), so it stays readable.
+- Quiet buttons, the navigation pill links, the wordmark link and the links on the auth pages: on hover an accent fill wipes in from the left, and the label switches to the on-accent dark color in step with the fill.
+- Inline text links (footer links, "Sign in", "Create account"): the underline recolors to the accent, drawn from left to right. No filled background.
+- Timing: 200 ms, ease-out (cubic-bezier(0.22, 1, 0.36, 1)). The fill enters from the left and leaves toward the right when the pointer exits, so the wipe always travels in one direction.
+- Build it with a pseudo-element scaled on the X axis (transform only), clipped by the element's own corners. The label color change uses the same timing so the two stay in step.
+- The same state shows on keyboard focus (:focus-visible), together with a visible focus ring. Put the hover styles inside a hover-capable media query so touch screens never get a stuck hover state.
+- Pressing (:active) scales the element to 0.98 for 100 ms.
+- Disabled and loading buttons show no wipe.
+- It is not used on table rows, cards or panels. Do not add any other hover motion.
+- With prefers-reduced-motion on, the color changes instantly with no wipe.
 
 ### Performance and accessibility
 
@@ -142,7 +157,7 @@ Decoration:
 - emojis
 - terminal window mockups
 - animated arrows
-- hover animations other than a color change and visible focus states
+- hover animations other than the one left-to-right color fill defined in the Motion section, and visible focus states
 - checkmark bullet lists
 
 Typography:
@@ -159,7 +174,9 @@ Content:
 
 ## Always do
 
-- Show the real product. Use real screenshots of the running app, captured with Playwright after the app redesign is finished, and saved in the public folder. If a screen needs data to look realistic, use the data that exists and tell the owner what is missing. Do not invent numbers.
+- Show the real product. Use real screenshots of the running app, captured with Playwright after the app redesign is finished, and saved in the public folder.
+- Capture screenshots from a production build (next build, then next start), or with the Next.js dev indicator turned off. No dev badge, no browser chrome, no password-manager banners. Capture at 2x pixel density. Pick a repository and a time period that show populated charts, never empty states. Do not show a real personal email address in any screenshot.
+- Screenshot frames have a 1px line border and nothing else: no glow, no shadow, no blue halo, no gradient border. If a screen needs data to look realistic, use the data that exists and tell the owner what is missing. Do not invent numbers.
 - Loading states: skeleton loaders that match the final layout for every list, table and chart that loads data. Also real empty states and error states.
 - Terms of Service and Privacy Policy pages, linked from the footer and from the sign-up screen. Write them in plain language from what the app really does: GitHub sign-in, storing repository metadata and pull request, commit and deployment data from GitHub, sending alert and digest emails. Put a code comment at the top of each page saying it is a draft that must be reviewed before public launch.
 - Relative times ("57 days ago"), never raw hour counts ("1384 hours ago").
@@ -172,6 +189,8 @@ Content:
 - Left-aligned text, a 12-column grid, content width around 1120px.
 - Vary section layouts down the page. No two consecutive sections with the same structure.
 - Data first: numbers in the mono font, aligned, with units and the period they cover.
+- One accent action per screen. Use the same words everywhere: "Sign in", "Create account", "Sign out", "Continue with GitHub".
+- Headlines break only between words. A word never splits across two lines.
 - Form inputs are underline-only or flat on the surface color, with a visible focus ring in the accent.
 
 ## Removals

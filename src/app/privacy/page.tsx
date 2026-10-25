@@ -1,18 +1,27 @@
-// Draft Privacy Policy — must be reviewed by legal counsel before public launch.
+// DRAFT — This document was generated from the real capabilities of the FlowMetrics platform.
+// It must be reviewed by qualified legal counsel before FlowMetrics is opened to the public.
+// Do not treat this as a binding legal document.
 
 import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
 
 export const metadata = {
-  title: 'Privacy Policy: FlowMetrics',
+  title: 'Privacy Policy | FlowMetrics',
   description: 'Privacy Policy for the FlowMetrics developer analytics platform.',
 }
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen bg-[var(--fm-bg)] text-[var(--fm-text)]">
-      <header className="border-b border-[var(--fm-line)] px-6 py-4">
-        <div className="mx-auto flex max-w-[1120px] items-center justify-between">
+    <div style={{ minHeight: '100vh', background: 'var(--fm-bg)', color: 'var(--fm-text)' }}>
+      <header
+        style={{
+          borderBottom: '1px solid var(--fm-line)',
+          paddingTop: '16px',
+          paddingBottom: '16px',
+          paddingLeft: 'max(24px, calc((100vw - 1120px) / 2))',
+          paddingRight: 'max(24px, calc((100vw - 1120px) / 2))',
+        }}
+      >
+        <div className="flex items-center justify-between">
           <Link
             href="/"
             className="font-mono text-sm font-semibold tracking-tight text-[var(--fm-text)] hover:text-[var(--fm-accent)] transition-colors"
@@ -21,95 +30,237 @@ export default function PrivacyPage() {
           </Link>
           <Link
             href="/login"
-            className="font-mono text-xs text-[var(--fm-text-muted)] hover:text-[var(--fm-text)] transition-colors inline-flex items-center gap-1.5"
+            className="font-mono text-xs text-[var(--fm-text-muted)] hover:text-[var(--fm-text)] transition-colors"
           >
-            <ArrowLeft className="h-3 w-3" />
-            Back to sign in
+            Sign in
           </Link>
         </div>
       </header>
 
-      <main className="mx-auto max-w-[1120px] px-6 py-16">
-        <div className="max-w-2xl space-y-8">
-          <div>
-            <p className="font-mono text-xs text-[var(--fm-text-muted)]">Legal</p>
-            <h1 className="mt-2 font-mono text-3xl font-bold tracking-tight text-[var(--fm-text)]">
-              Privacy Policy
-            </h1>
-            <p className="mt-2 text-sm text-[var(--fm-text-muted)]">
-              Last updated: October 2026. This is a draft document.
-            </p>
+      <main
+        style={{
+          paddingTop: '72px',
+          paddingBottom: '120px',
+          paddingLeft: 'max(24px, calc((100vw - 1120px) / 2))',
+          paddingRight: 'max(24px, calc((100vw - 1120px) / 2))',
+        }}
+      >
+        <div style={{ maxWidth: '680px' }}>
+          <p className="font-mono text-xs mb-4" style={{ color: 'var(--fm-text-muted)' }}>
+            Legal
+          </p>
+          <h1
+            className="font-mono font-bold mb-3"
+            style={{ fontSize: 'clamp(1.75rem, 3vw, 2.5rem)', lineHeight: 1.1 }}
+          >
+            Privacy Policy
+          </h1>
+          <p className="font-mono text-xs mb-16" style={{ color: 'var(--fm-text-muted)' }}>
+            Last updated October 2026. Draft document, not yet in effect.
+          </p>
+
+          <div
+            style={{ borderTop: '1px solid var(--fm-line)', paddingTop: '48px' }}
+            className="space-y-12"
+          >
+            <section>
+              <h2
+                className="font-mono text-base font-semibold mb-4"
+                style={{ color: 'var(--fm-text)' }}
+              >
+                1. What this policy covers
+              </h2>
+              <p
+                className="text-base leading-relaxed"
+                style={{ color: 'var(--fm-text-muted)', fontFamily: 'var(--font-ibm-plex-sans)' }}
+              >
+                This policy describes what data FlowMetrics collects when you use the service,
+                how that data is used, and the choices you have. FlowMetrics is an engineering
+                analytics tool that reads GitHub repository metadata and activity to compute
+                DORA metrics and delivery insights for your team.
+              </p>
+            </section>
+
+            <section>
+              <h2
+                className="font-mono text-base font-semibold mb-4"
+                style={{ color: 'var(--fm-text)' }}
+              >
+                2. Data we collect
+              </h2>
+              <p
+                className="text-base leading-relaxed mb-6"
+                style={{ color: 'var(--fm-text-muted)', fontFamily: 'var(--font-ibm-plex-sans)' }}
+              >
+                We collect two types of data:
+              </p>
+
+              <h3
+                className="font-mono text-sm font-medium mb-3"
+                style={{ color: 'var(--fm-text)' }}
+              >
+                Account data
+              </h3>
+              <p
+                className="text-base leading-relaxed mb-6"
+                style={{ color: 'var(--fm-text-muted)', fontFamily: 'var(--font-ibm-plex-sans)' }}
+              >
+                When you sign in with GitHub we receive your GitHub username, display name and
+                primary email address. When you sign in with email and password, we store your
+                email address and a hashed version of your password. We store your organization
+                membership and role within FlowMetrics.
+              </p>
+
+              <h3
+                className="font-mono text-sm font-medium mb-3"
+                style={{ color: 'var(--fm-text)' }}
+              >
+                Repository activity data
+              </h3>
+              <p
+                className="text-base leading-relaxed"
+                style={{ color: 'var(--fm-text-muted)', fontFamily: 'var(--font-ibm-plex-sans)' }}
+              >
+                When you connect a GitHub repository, FlowMetrics reads and stores: repository
+                name and owner; pull request numbers, titles, author usernames, and open/merge
+                timestamps; commit timestamps and author usernames; code review timestamps and
+                reviewer usernames; deployment records including environment, status, and
+                timestamps. Source code file contents are never read or stored.
+              </p>
+            </section>
+
+            <section>
+              <h2
+                className="font-mono text-base font-semibold mb-4"
+                style={{ color: 'var(--fm-text)' }}
+              >
+                3. How we use this data
+              </h2>
+              <ul
+                className="text-base leading-relaxed space-y-2"
+                style={{
+                  color: 'var(--fm-text-muted)',
+                  fontFamily: 'var(--font-ibm-plex-sans)',
+                  paddingLeft: '1.5rem',
+                }}
+              >
+                <li>
+                  Computing DORA metrics, cycle time, contributor leaderboards and open PR lists
+                  for display in the dashboard.
+                </li>
+                <li>
+                  Detecting metric anomalies and triggering alert emails to the organization
+                  administrator.
+                </li>
+                <li>
+                  Generating automated weekly digest emails summarizing delivery health.
+                </li>
+                <li>
+                  Caching API responses in Redis to reduce GitHub API load (cached data is
+                  short-lived and not persisted to disk).
+                </li>
+              </ul>
+              <p
+                className="text-base leading-relaxed mt-4"
+                style={{ color: 'var(--fm-text-muted)', fontFamily: 'var(--font-ibm-plex-sans)' }}
+              >
+                We do not sell your data. We do not use your data to train machine learning
+                models. We do not share your data with third parties except as necessary to
+                operate the service (for example, sending email through a transactional mail
+                provider).
+              </p>
+            </section>
+
+            <section>
+              <h2
+                className="font-mono text-base font-semibold mb-4"
+                style={{ color: 'var(--fm-text)' }}
+              >
+                4. Data retention
+              </h2>
+              <p
+                className="text-base leading-relaxed"
+                style={{ color: 'var(--fm-text-muted)', fontFamily: 'var(--font-ibm-plex-sans)' }}
+              >
+                Repository activity data is retained while the repository is connected to
+                FlowMetrics. When you disconnect a repository you can request deletion of all
+                stored activity data for that repository. Account data is retained until you
+                delete your account.
+              </p>
+            </section>
+
+            <section>
+              <h2
+                className="font-mono text-base font-semibold mb-4"
+                style={{ color: 'var(--fm-text)' }}
+              >
+                5. GitHub OAuth tokens
+              </h2>
+              <p
+                className="text-base leading-relaxed"
+                style={{ color: 'var(--fm-text-muted)', fontFamily: 'var(--font-ibm-plex-sans)' }}
+              >
+                When you sign in with GitHub, we store an OAuth access token in an encrypted
+                Redis cache (keyed to your user ID) to make API requests on your behalf. The
+                token is used only to read data from the repositories you have connected.
+                Revoking FlowMetrics access from your GitHub settings immediately invalidates
+                the token.
+              </p>
+            </section>
+
+            <section>
+              <h2
+                className="font-mono text-base font-semibold mb-4"
+                style={{ color: 'var(--fm-text)' }}
+              >
+                6. Your rights
+              </h2>
+              <p
+                className="text-base leading-relaxed"
+                style={{ color: 'var(--fm-text-muted)', fontFamily: 'var(--font-ibm-plex-sans)' }}
+              >
+                You can disconnect repositories, leave organizations and request account deletion
+                from the dashboard settings at any time. To request export or deletion of data
+                outside the dashboard, contact us. We will respond within 30 days.
+              </p>
+            </section>
+
+            <section>
+              <h2
+                className="font-mono text-base font-semibold mb-4"
+                style={{ color: 'var(--fm-text)' }}
+              >
+                7. Changes to this policy
+              </h2>
+              <p
+                className="text-base leading-relaxed"
+                style={{ color: 'var(--fm-text-muted)', fontFamily: 'var(--font-ibm-plex-sans)' }}
+              >
+                We may update this policy when the platform changes. We will update the date at
+                the top of this page. For material changes we will notify organization
+                administrators by email.
+              </p>
+            </section>
           </div>
 
-          <div className="space-y-6 text-sm text-[var(--fm-text)] leading-relaxed border-t border-[var(--fm-line)] pt-8">
-            <section className="space-y-2">
-              <h2 className="font-mono text-base font-semibold text-[var(--fm-text)]">
-                1. Information we collect
-              </h2>
-              <p className="text-[var(--fm-text-muted)]">
-                When you create a FlowMetrics account, we collect your name, email address, and GitHub username. When you connect a GitHub repository, we sync and store:
-              </p>
-              <ul className="list-disc pl-5 space-y-1 text-[var(--fm-text-muted)] text-xs font-mono">
-                <li>Repository metadata (name, owner, default branch)</li>
-                <li>Pull request data (numbers, titles, state, author, reviewers, size, timestamps)</li>
-                <li>Commit metadata (hashes, commit times, author usernames)</li>
-                <li>Deployment event records (environment, status, duration, timestamps)</li>
-              </ul>
-              <p className="text-[var(--fm-text-muted)] mt-2">
-                We do not collect, read, or store the contents of your source code files.
-              </p>
-            </section>
-
-            <section className="space-y-2">
-              <h2 className="font-mono text-base font-semibold text-[var(--fm-text)]">
-                2. How your data is used
-              </h2>
-              <p className="text-[var(--fm-text-muted)]">
-                We use collected information solely to provide FlowMetrics features:
-              </p>
-              <ul className="list-disc pl-5 space-y-1 text-[var(--fm-text-muted)] text-xs font-mono">
-                <li>Calculating team DORA metrics and cycle time trends</li>
-                <li>Generating contributor activity and code review turnaround heatmaps</li>
-                <li>Sending notification emails when anomalies (e.g. failing deployments) occur</li>
-                <li>Delivering automated weekly digest summaries to organization members</li>
-              </ul>
-            </section>
-
-            <section className="space-y-2">
-              <h2 className="font-mono text-base font-semibold text-[var(--fm-text)]">
-                3. Data sharing and disclosure
-              </h2>
-              <p className="text-[var(--fm-text-muted)]">
-                We do not sell, rent, or trade your personal information or engineering metrics. Your metrics are only accessible to authorized members of your organization.
-              </p>
-            </section>
-
-            <section className="space-y-2">
-              <h2 className="font-mono text-base font-semibold text-[var(--fm-text)]">
-                4. Security and token storage
-              </h2>
-              <p className="text-[var(--fm-text-muted)]">
-                GitHub OAuth access tokens are securely encrypted at rest. We adhere to industry-standard security practices to protect data against unauthorized access, alteration, or disclosure.
-              </p>
-            </section>
-
-            <section className="space-y-2">
-              <h2 className="font-mono text-base font-semibold text-[var(--fm-text)]">
-                5. Data retention and deletion
-              </h2>
-              <p className="text-[var(--fm-text-muted)]">
-                You retain ownership of all your data. If you disconnect a repository or request account deletion, we purge the associated analytics records from active databases.
-              </p>
-            </section>
-
-            <section className="space-y-2">
-              <h2 className="font-mono text-base font-semibold text-[var(--fm-text)]">
-                6. Questions and contact
-              </h2>
-              <p className="text-[var(--fm-text-muted)]">
-                If you have questions about this privacy policy or your stored data, contact us via your organization settings or on our GitHub repository.
-              </p>
-            </section>
+          <div
+            className="flex flex-wrap gap-6 mt-16"
+            style={{ borderTop: '1px solid var(--fm-line)', paddingTop: '32px' }}
+          >
+            <Link
+              href="/terms"
+              className="font-mono text-xs underline underline-offset-4"
+              style={{ color: 'var(--fm-text-muted)' }}
+            >
+              Terms of Service
+            </Link>
+            <Link
+              href="/"
+              className="font-mono text-xs underline underline-offset-4"
+              style={{ color: 'var(--fm-text-muted)' }}
+            >
+              Back to home
+            </Link>
           </div>
         </div>
       </main>

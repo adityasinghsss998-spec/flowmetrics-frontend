@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
+import { closeSocket } from '@/hooks/useSocket'
 import { useQuery } from '@tanstack/react-query'
 import api from '@/lib/axios'
 import type { Organization, Repository } from '@/types/api'
@@ -44,6 +45,16 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
   const params = useParams()
   const repoId = params?.repoId
   const { user, logout } = useAuthStore()
+
+  const handleSignOut = () => {
+    localStorage.removeItem('accessToken')
+    localStorage.removeItem('refreshToken')
+    localStorage.removeItem('githubToken')
+    localStorage.removeItem('flowmetrics-auth')
+    closeSocket()
+    logout()
+    window.location.href = '/'
+  }
 
   const orgsQuery = useQuery<OrgWithMembers[]>({
     queryKey: ['orgs'],
@@ -326,11 +337,12 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
             </DropdownMenuItem>
             <DropdownMenuSeparator style={{ background: 'var(--fm-line)' }} />
             <DropdownMenuItem
-              onClick={logout}
+              id="sidebar-signout-button"
+              onClick={handleSignOut}
               className="cursor-pointer text-sm"
               style={{ color: 'var(--fm-status-poor)' }}
             >
-              Log out
+              Sign out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
