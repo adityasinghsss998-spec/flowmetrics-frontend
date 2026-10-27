@@ -229,3 +229,71 @@ export interface ApiResponse<T> {
   data: T
   message?: string
 }
+
+// ── AI Chat (ai-service via gateway) ──────────────────────────────────────────
+
+export interface AiChatStartResponse {
+  runId: string
+  status?: string
+  answer?: string
+  toolsCalled?: string[]
+  proposedAction?: { type: string; reasoning: string }
+}
+
+export interface AiRunRunning {
+  status: 'running'
+}
+
+export interface AiRunComplete {
+  status: 'complete'
+  answer: string
+  toolsCalled: string[]
+}
+
+export interface AiRunPendingApproval {
+  status: 'pending_approval'
+  runId: string
+  proposedAction: { type: string; reasoning: string }
+}
+
+export interface AiRunFailed {
+  status: 'failed'
+  message: string
+}
+
+export interface AiRunNotFound {
+  status: 'not_found'
+}
+
+export type AiRunResponse =
+  | AiRunRunning
+  | AiRunComplete
+  | AiRunPendingApproval
+  | AiRunFailed
+  | AiRunNotFound
+
+export interface AiHitlPendingItem {
+  runId: string
+  repoId: number
+  proposedAction: { type: string; reasoning: string }
+}
+
+export interface AiHitlPendingResponse {
+  pending: AiHitlPendingItem[]
+}
+
+export interface AiHitlApproveResponse {
+  status: 'approved' | 'rejected'
+  finalAnswer: string
+}
+
+// History entry stored in component state
+export type AiTranscriptEntry =
+  | { kind: 'qa'; question: string; answer: string; toolsCalled: string[] }
+  | {
+      kind: 'hitl'
+      runId: string
+      proposedAction: { type: string; reasoning: string }
+      finalAnswer?: string
+      resolved?: boolean
+    }

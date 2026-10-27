@@ -12,6 +12,8 @@ import PrSizeChart from '@/components/analytics/PrSizeChart'
 import OpenPrAlert from '@/components/analytics/OpenPrAlert'
 import RecentDeployments from '@/components/analytics/RecentDeployments'
 import { useCurrentRepo } from '@/hooks/useCurrentRepo'
+import { useMemberRole } from '@/hooks/useOrgRole'
+import AiChatPanel from '@/components/ai/AiChatPanel'
 import {
   Select,
   SelectContent,
@@ -30,6 +32,7 @@ export default function RepoDashboardPage() {
   const days = Number(searchParams.get('days') ?? 30)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const { repoFullName } = useCurrentRepo(repoId)
+  const { activeOrgId } = useMemberRole()
 
   const disconnectMutation = useMutation({
     mutationFn: () => api.delete(`/repos/${repoId}`),
@@ -310,6 +313,11 @@ export default function RepoDashboardPage() {
           <RecentDeployments data={deploymentsQuery.data ?? []} isLoading={deploymentsQuery.isLoading} />
         </div>
       </div>
+
+      {/* AI analyst panel */}
+      {activeOrgId != null && (
+        <AiChatPanel repoId={Number(repoId)} orgId={activeOrgId} />
+      )}
     </div>
   )
 }
