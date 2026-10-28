@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import HeroSection, { LandingNav } from '@/components/layout/HeroSection'
 import PanelScene from '@/components/layout/PanelScene'
+import AskAiSection from '@/components/layout/AskAiSection'
 
 /* ─── DORA metric definitions ───────────────────────────────── */
 
@@ -66,6 +67,15 @@ export default function LandingPage() {
 
       {/* ── Product panels ──────────────────────────────────── */}
       <PanelScene />
+
+      {/* ── Ask in plain language (mascot + AI description) ──── */}
+      {/*
+       * No dedicated AI panel screenshot has been captured yet.
+       * The section renders with the mascot and paragraph only.
+       * Once a real screenshot is captured via Playwright (with the
+       * ai-service running), pass it as: screenshotSrc="/screenshot-ai-panel.png"
+       */}
+      <AskAiSection />
 
       {/* ── Metrics definition list ─────────────────────────── */}
       <section

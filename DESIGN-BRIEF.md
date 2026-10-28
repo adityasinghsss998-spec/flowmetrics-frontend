@@ -76,7 +76,7 @@ Motion is the main feature of the landing page, so it must be exact. The owner l
 General rules:
 - Animate transform and opacity only. Never animate width, height, top, left or margins.
 - Scroll-linked motion maps directly to scroll position (linear). Time-based motion uses ease-out and finishes in under 200 ms for UI, longer only for the hero text.
-- Nothing loops. The only hover animation is the left-to-right color fill in section 5. No animated arrows.
+- Nothing loops, except the mascot's thinking sweep and a slow opacity change on skeleton blocks while data loads (no moving gradient shimmer). The only hover animation is the left-to-right color fill in section 5. The only motion that follows the pointer is the mascot's eyes. No animated arrows.
 - Only two things use text reveal: the hero headline and each section title. All other text is static.
 - Everything honors prefers-reduced-motion (see the end of this section).
 
@@ -131,6 +131,44 @@ The owner likes how Render's buttons fill with color from the left on hover. Bui
 - On screens under 768px wide: use smaller start angles (2 degrees at most), one column, and keep the same straighten-on-scroll effect. Check that it stays smooth.
 - If a device cannot hold 60 frames per second on the scene, simplify the scene. Do not ship a stuttering effect.
 
+## Mascot: flowmetrics-ai
+
+The AI analyst has a face and a name, so people can see that a real AI system sits behind the product. Its name is "flowmetrics-ai", always written in the mono font. It must look hand-drawn and restrained, not like a generic AI robot.
+
+Where it appears (nowhere else): the header of the AI panel on the repository page (72px), the right panel of the sign-in and sign-up pages (56px), and the "Ask in plain language" landing section (64px).
+
+Drawing:
+- One hand-made flat SVG React component. No icon library, no image file.
+- A rounded-square head (radius 6px at 72px size), filled with the surface-raised color, with a 1px border in the text-muted color.
+- Two round eyes in the off-white text color, each with a dark pupil in the page background color.
+- A flat line for the mouth.
+- A short antenna with one small dot in the accent color. This dot is the only accent on the mascot.
+- No gradients, glow, shadows, blur, gloss highlights, or extra colors.
+
+Motion:
+- The pupils follow the pointer. Compute the offset from the pointer position relative to each eye, clamp it to a small radius, and apply it as a transform on the pupils only. Use one pointer listener on the window, throttled with requestAnimationFrame, active only while the mascot is on screen (IntersectionObserver), and removed when the component unmounts.
+- Blink: both eyes close for about 120 ms at random intervals between 4 and 7 seconds. Never blink while thinking.
+- States, set by a prop:
+  - greeting: smile, eyes follow the pointer, and the greeting text types out next to it (see below).
+  - ready: slight smile. When an answer arrives, one blink.
+  - typing: while the question box has focus, the pupils look down toward it.
+  - thinking: flat mouth, pupils sweep slowly left and right, one sweep every 1.6 seconds. This is the only looping motion.
+  - unavailable: eyelids half closed, flat mouth.
+- Greeting: each time the user opens a repository (or switches to another one), the panel types "Hi, I am flowmetrics-ai." and then "Ask me anything about {owner/name}." using the typing reveal, at about 14 ms per character, once per visit.
+- Reduced motion: a static face. No pointer following, no blink, no sweep. The state is still shown by the mouth and eyelids. The greeting text appears immediately.
+- Touch devices have no pointer: the pupils rest looking toward the question box.
+- Accessibility: the face is decorative (aria-hidden). The name and a status line next to it are real text. The status line says "Ready", "Reading repository data", "Answer ready" or "Unavailable", and is announced politely.
+
+## Auth page layout
+
+The sign-in and sign-up pages must use the whole screen, not a narrow column floating in empty space.
+
+- From 1024px wide: two columns that each take half the viewport.
+- Left column: the wordmark at the top left (a link to the landing page), aligned to the same left padding as the landing page. The form sits vertically centered in the column, up to 420px wide, left-aligned on that padding. The Terms of Service and Privacy Policy links sit at the bottom of the column.
+- Right column: a full-height panel in the surface color, flush to the top, right and bottom edges of the viewport. No margins, no rounded corners, no gradient. At its top left it holds the mascot (56px) with the typed greeting "Hi, I am flowmetrics-ai." and one plain sentence, "Connect a repository and ask me about its delivery metrics." Below that, a large real screenshot of the AI panel showing a real answer, with a 1px border, cropped by the right and bottom edges of the panel.
+- Sign-in and sign-up share the same layout and the same right panel.
+- Under 1024px wide: a single column, form first, and the right panel is hidden.
+
 ## Never do (these make a site look generated)
 
 Color and surfaces:
@@ -153,7 +191,8 @@ Layout:
 
 Decoration:
 - Lucide icons used as decoration, icons inside rounded squares
-- sparkle icons
+- sparkle icons, or sparkles around the assistant
+- glowing, neon, blue or purple robot eyes, circuit patterns, brain icons, binary or matrix text
 - emojis
 - terminal window mockups
 - animated arrows
@@ -213,6 +252,8 @@ Do not describe features the product does not have. Read the codebase and the an
 6. Alerts and weekly summary: real screenshots of the alert email and the weekly summary email if the owner provides them. Otherwise leave this section out.
 7. Closing line with one button. No gradient card, no glow.
 8. Footer: Terms of Service, Privacy Policy, an accessibility statement, a link to the GitHub repository, and a real contact address supplied by the owner. If there is no address, leave it out.
+
+Added section: "Ask in plain language". Place it between the product panels and the four metrics. It has the mascot (64px), a short honest paragraph (for example: "Ask flowmetrics-ai about a repository. It reads your DORA metrics, cycle time, open pull requests and more, and tells you which data it used."), and a large real screenshot of the AI panel showing a real answer. Include it only if the screenshot can be captured from the real running backend. Otherwise leave the section out and report that.
 
 ## Stack and tools
 

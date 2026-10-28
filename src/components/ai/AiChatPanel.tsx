@@ -30,6 +30,7 @@ import type {
   AiTranscriptEntry,
   AiHitlPendingItem,
 } from '@/types/api'
+import FlowMetricsMascot, { type MascotState } from './FlowMetricsMascot'
 
 // ---------------------------------------------------------------------------
 // Tool name -> friendly label map
@@ -284,9 +285,11 @@ type PanelStatus =
 interface AiChatPanelProps {
   repoId: number
   orgId: number
+  /** Displayed in the mascot greeting: "Ask me anything about {repoName}" */
+  repoName?: string
 }
 
-export default function AiChatPanel({ repoId, orgId }: AiChatPanelProps) {
+export default function AiChatPanel({ repoId, orgId, repoName }: AiChatPanelProps) {
   const [question, setQuestion] = useState('')
   const [transcript, setTranscript] = useState<AiTranscriptEntry[]>([])
   const [panelStatus, setPanelStatus] = useState<PanelStatus>({ kind: 'idle' })
@@ -511,15 +514,35 @@ export default function AiChatPanel({ repoId, orgId }: AiChatPanelProps) {
   const isUnavailable = panelStatus.kind === 'unavailable'
 
   // --------------------------------------------------------------------------
+  // Map panelStatus → MascotState
+  // --------------------------------------------------------------------------
+  function getMascotState(): MascotState {
+    if (isUnavailable) return 'unavailable'
+    if (isWaiting)     return 'thinking'
+    // Show greeting on the first visit (empty transcript, idle)
+    if (transcript.length === 0) return 'greeting'
+    return 'ready'
+  }
+
+  function getMascotStatus(): string {
+    if (isUnavailable) return 'Unavailable'
+    if (isWaiting)     return 'Reading repository data'
+    return 'Ready'
+  }
+
+  // --------------------------------------------------------------------------
   // Render -- unavailable state
   // --------------------------------------------------------------------------
   if (isUnavailable) {
     return (
       <section aria-labelledby="ai-panel-heading" style={{ marginTop: 48, paddingTop: 32, borderTop: '1px solid var(--fm-line)' }}>
-        <h2 id="ai-panel-heading" style={{ fontFamily: 'var(--font-ibm-plex-mono)', fontSize: 15, fontWeight: 600, color: 'var(--fm-text)', marginBottom: 16 }}>
-          Ask about this repository
-        </h2>
-        <p style={{ fontFamily: 'var(--font-ibm-plex-sans)', fontSize: 14, color: 'var(--fm-text-muted)' }}>
+        <FlowMetricsMascot
+          size={72}
+          state="unavailable"
+          statusText="Unavailable"
+          repoName={repoName}
+        />
+        <p style={{ marginTop: 16, fontFamily: 'var(--font-ibm-plex-sans), "IBM Plex Sans", -apple-system, sans-serif', fontSize: 14, color: 'var(--fm-text-muted)' }}>
           The AI analyst is unavailable right now. The rest of the dashboard still works.
         </p>
       </section>
@@ -531,9 +554,16 @@ export default function AiChatPanel({ repoId, orgId }: AiChatPanelProps) {
   // --------------------------------------------------------------------------
   return (
     <section aria-labelledby="ai-panel-heading" style={{ marginTop: 48, paddingTop: 32, borderTop: '1px solid var(--fm-line)' }}>
-      <h2 id="ai-panel-heading" style={{ fontFamily: 'var(--font-ibm-plex-mono)', fontSize: 15, fontWeight: 600, color: 'var(--fm-text)', marginBottom: 20 }}>
-        Ask about this repository
-      </h2>
+      {/* Mascot header replaces plain h2 */}
+      <div style={{ marginBottom: 20 }}>
+        <FlowMetricsMascot
+          size={72}
+          state={getMascotState()}
+          statusText={getMascotStatus()}
+          repoName={repoName}
+          showGreeting={transcript.length === 0}
+        />
+      </div>
 
       {/* Pending HITL requests banner */}
       {pendingHitl.length > 0 && (
