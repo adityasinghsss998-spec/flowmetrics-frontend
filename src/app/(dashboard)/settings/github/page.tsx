@@ -23,17 +23,19 @@ function GitHubSettingsContent() {
   }, [fetchMe, router, searchParams])
 
   return (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
-      <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-emerald-500/20 bg-emerald-500/10 mb-4">
-        <CheckCircle2 className="h-8 w-8 text-emerald-400" />
-      </div>
-      <h2 className="text-xl font-bold text-foreground">GitHub Account Connected!</h2>
-      <p className="text-sm text-muted-foreground mt-1 mb-4">
-        Your GitHub account has been successfully linked. Redirecting to dashboard…
-      </p>
-      <div className="flex items-center gap-2 text-xs text-indigo-400">
-        <Loader2 className="h-4 w-4 animate-spin" />
-        <span>Updating profile…</span>
+    <div className="flex min-h-[50vh] flex-col items-center justify-center text-center p-6">
+      <div className="w-full max-w-md rounded-[4px] border border-[var(--fm-line)] bg-[var(--fm-surface-raised)] p-8 space-y-4">
+        <div className="flex justify-center">
+          <CheckCircle2 className="h-8 w-8 text-[var(--fm-status-good)]" />
+        </div>
+        <h2 className="font-mono text-lg font-semibold text-[var(--fm-text)]">GitHub Connected</h2>
+        <p className="text-xs text-[var(--fm-text-muted)]">
+          Your GitHub account has been linked. Redirecting to dashboard…
+        </p>
+        <div className="flex items-center justify-center gap-2 font-mono text-xs text-[var(--fm-text-muted)] pt-2">
+          <Loader2 className="h-3.5 w-3.5 animate-spin text-[var(--fm-accent)]" />
+          <span>Updating profile…</span>
+        </div>
       </div>
     </div>
   )
@@ -43,9 +45,9 @@ export default function GitHubSettingsPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
-          <Loader2 className="h-8 w-8 text-indigo-400 animate-spin mb-4" />
-          <p className="text-sm text-muted-foreground">Connecting GitHub account…</p>
+        <div className="flex min-h-[50vh] flex-col items-center justify-center text-center">
+          <Loader2 className="h-6 w-6 text-[var(--fm-accent)] animate-spin mb-3" />
+          <p className="font-mono text-xs text-[var(--fm-text-muted)]">Connecting GitHub account…</p>
         </div>
       }
     >

@@ -4,7 +4,7 @@ import React, { useEffect, useState, useCallback } from 'react'
 import api from '@/lib/axios'
 import { Invitation, ApiResponse } from '@/types/api'
 import { useAuthStore } from '@/store/authStore'
-import { Mail, Check, AlertCircle, Loader2, Sparkles, X } from 'lucide-react'
+import { Mail, Check, AlertCircle, Loader2, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 export function PendingInvitesBanner() {
@@ -27,7 +27,6 @@ export function PendingInvitesBanner() {
         setInvitations(res.data.data)
       }
     } catch (err: any) {
-      // If 401/404 or backend unavailable, silently don't break layout
       console.log('Pending invitations check:', err?.response?.data?.message || err?.message)
     } finally {
       setLoading(false)
@@ -36,7 +35,6 @@ export function PendingInvitesBanner() {
 
   useEffect(() => {
     fetchPendingInvitations()
-    // Poll or check on window focus
     const handleFocus = () => fetchPendingInvitations()
     window.addEventListener('focus', handleFocus)
     return () => window.removeEventListener('focus', handleFocus)
@@ -53,10 +51,8 @@ export function PendingInvitesBanner() {
         [invitation.token]: `Joined ${invitation.org_name || 'organization'} successfully!`,
       }))
 
-      // Remove from list after brief moment and refresh
       setTimeout(() => {
         setInvitations((prev) => prev.filter((i) => i.token !== invitation.token))
-        // Dispatch custom event so sidebar/org switchers can refresh org list
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('flowmetrics:org-joined', { detail: invitation }))
         }
@@ -80,7 +76,7 @@ export function PendingInvitesBanner() {
   }
 
   return (
-    <div className="w-full bg-gradient-to-r from-indigo-950/80 via-purple-950/70 to-slate-900/90 border-b border-indigo-500/30 px-4 py-3 shadow-lg shadow-indigo-950/20 backdrop-blur-md transition-all duration-300">
+    <div className="w-full bg-[var(--fm-surface)] border-b border-[var(--fm-line)] px-4 py-3">
       <div className="max-w-7xl mx-auto space-y-2">
         {visibleInvitations.map((inv) => {
           const isPendingAction = actionLoading[inv.token]
@@ -90,36 +86,35 @@ export function PendingInvitesBanner() {
           return (
             <div
               key={inv.token}
-              className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-indigo-900/30 hover:bg-indigo-900/40 border border-indigo-500/20 rounded-xl p-3.5 transition-colors"
+              className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-[var(--fm-surface-raised)] border border-[var(--fm-line)] rounded-[4px] p-3.5"
             >
               <div className="flex items-start gap-3">
-                <div className="h-9 w-9 rounded-lg bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center shrink-0 text-indigo-400 mt-0.5 sm:mt-0">
+                <div className="h-8 w-8 rounded-[4px] bg-[var(--fm-surface)] border border-[var(--fm-line)] flex items-center justify-center shrink-0 text-[var(--fm-text-muted)] mt-0.5 sm:mt-0">
                   <Mail className="h-4 w-4" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm font-semibold text-foreground flex items-center gap-1.5">
-                      <Sparkles className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
+                    <span className="font-mono text-xs font-semibold text-[var(--fm-text)]">
                       Pending Invitation
                     </span>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                      {inv.role.toUpperCase()}
+                    <span className="font-mono text-xs px-1.5 py-0.5 rounded-[2px] border border-[var(--fm-line)] bg-[var(--fm-surface)] text-[var(--fm-text-muted)]">
+                      {inv.role}
                     </span>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    <span className="font-medium text-foreground">{inv.invited_by_name || 'A team member'}</span> has
+                  <p className="text-xs text-[var(--fm-text-muted)] mt-0.5">
+                    <span className="font-mono text-[var(--fm-text)] font-medium">{inv.invited_by_name || 'A team member'}</span> has
                     invited you to join{' '}
-                    <span className="font-semibold text-indigo-300">{inv.org_name}</span>.
+                    <span className="font-mono text-[var(--fm-text)] font-semibold">{inv.org_name}</span>.
                   </p>
                   {errorMsg && (
-                    <p className="text-xs text-rose-400 flex items-center gap-1 mt-1 font-medium">
-                      <AlertCircle className="h-3.5 w-3.5" />
+                    <p className="font-mono text-xs text-[var(--fm-status-poor)] flex items-center gap-1 mt-1">
+                      <AlertCircle className="h-3 w-3" />
                       {errorMsg}
                     </p>
                   )}
                   {isSuccess && (
-                    <p className="text-xs text-emerald-400 flex items-center gap-1 mt-1 font-medium">
-                      <Check className="h-3.5 w-3.5" />
+                    <p className="font-mono text-xs text-[var(--fm-status-good)] flex items-center gap-1 mt-1">
+                      <Check className="h-3 w-3" />
                       {isSuccess}
                     </p>
                   )}
@@ -131,7 +126,6 @@ export function PendingInvitesBanner() {
                   size="sm"
                   variant="ghost"
                   onClick={() => handleDismiss(inv.token)}
-                  className="text-xs text-muted-foreground hover:text-foreground h-8 px-2.5"
                   disabled={isPendingAction || !!isSuccess}
                 >
                   <X className="h-3.5 w-3.5 mr-1" />
@@ -142,17 +136,16 @@ export function PendingInvitesBanner() {
                   size="sm"
                   onClick={() => handleAccept(inv)}
                   disabled={isPendingAction || !!isSuccess}
-                  className="bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs h-8 px-4 shadow-sm shadow-indigo-500/30 transition-all cursor-pointer"
                 >
                   {isPendingAction ? (
                     <>
                       <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                      Accepting...
+                      Accepting…
                     </>
                   ) : isSuccess ? (
                     <>
                       <Check className="h-3.5 w-3.5 mr-1.5" />
-                      Accepted!
+                      Accepted
                     </>
                   ) : (
                     'Accept Invitation'

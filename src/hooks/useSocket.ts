@@ -66,10 +66,18 @@ export const useSocket = (repoId: number | null) => {
     })
 
     return () => {
-      socket!.emit('leave:repo', { repoId })
-      socket!.disconnect()
+      socket?.emit('leave:repo', { repoId })
+      socket?.disconnect()
       socket = null
       setConnected(false)
     }
   }, [repoId, queryClient, setConnected, addEvent])
 }
+
+export const closeSocket = () => {
+  if (socket) {
+    socket.disconnect()
+    socket = null
+  }
+}
+

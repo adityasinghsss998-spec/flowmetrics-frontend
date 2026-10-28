@@ -1,8 +1,8 @@
 'use client'
 
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
-import { useQuery } from '@tanstack/react-query'
-import { Rocket, Clock, ArrowLeft } from 'lucide-react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { ArrowLeft, Plus } from 'lucide-react'
 import api from '@/lib/axios'
 import { DeploymentFrequencyPoint, BuildDurationPoint, BuildDurationSummary, RecentDeployment, Organization } from '@/types/api'
 import DeploymentFrequency from '@/components/analytics/DeploymentFrequency'
@@ -12,7 +12,6 @@ import RecordDeploymentDialog from '@/components/deployments/RecordDeploymentDia
 import GithubActionsSetup from '@/components/deployments/GithubActionsSetup'
 import { useAuthStore } from '@/store/authStore'
 import { useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
 import {
   Select,
   SelectContent,
@@ -21,6 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
+import { useCurrentRepo } from '@/hooks/useCurrentRepo'
 
 interface BuildDurationResponse {
   trend: BuildDurationPoint[]
@@ -40,6 +40,7 @@ export default function DeploymentsPage() {
   const days = Number(searchParams.get('days') ?? 30)
   const { user } = useAuthStore()
   const [recordOpen, setRecordOpen] = useState(false)
+  const { repoFullName } = useCurrentRepo(repoId)
 
   const orgsQuery = useQuery<OrgWithMembers[]>({
     queryKey: ['orgs'],
@@ -88,63 +89,57 @@ export default function DeploymentsPage() {
   })
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
+    <div style={{ maxWidth: 1120, padding: '32px 24px' }} className="space-y-8">
+      {/* Top Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pb-6 border-b border-[var(--fm-line)]">
+        <div className="flex items-center gap-4">
           <Button
             id="back-to-repo"
             variant="ghost"
             size="sm"
             onClick={() => router.push(`/repos/${repoId}`)}
-            className="text-muted-foreground hover:text-foreground -ml-2 hover:bg-white/5"
+            className="border border-[var(--fm-line)]"
           >
-            <ArrowLeft className="h-4 w-4 mr-1" />
+            <ArrowLeft className="h-4 w-4 mr-1.5" />
             Overview
           </Button>
-          <div className="h-4 w-px bg-white/10" />
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-violet-500/15 border border-violet-500/20">
-              <Rocket className="h-4 w-4 text-violet-400" />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold tracking-tight text-foreground leading-none">
-                Deployments
-              </h1>
-              <p className="text-[11px] text-muted-foreground/60 mt-0.5">
-                Repository #{repoId}
-              </p>
-            </div>
+          <div>
+            <h1 className="font-mono text-2xl font-bold tracking-tight text-[var(--fm-text)]">
+              Deployments
+            </h1>
+            <p className="font-mono text-xs text-[var(--fm-text-muted)] mt-1">
+              {repoFullName || `Repository #${repoId}`} · {days}-day frequency and build duration
+            </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-1.5 backdrop-blur">
-            <Clock className="h-3.5 w-3.5 text-muted-foreground/60 shrink-0" />
-            <Select value={String(days)} onValueChange={(v) => router.push(`?days=${v}`)}>
-              <SelectTrigger id="time-range-selector" className="h-7 w-32 border-0 bg-transparent p-0 text-xs font-medium focus-visible:ring-0 shadow-none">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="7">Last 7 days</SelectItem>
-                <SelectItem value="30">Last 30 days</SelectItem>
-                <SelectItem value="60">Last 60 days</SelectItem>
-                <SelectItem value="90">Last 90 days</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        <div className="flex items-center gap-3">
+          <Select value={String(days)} onValueChange={(v) => router.push(`?days=${v}`)}>
+            <SelectTrigger id="time-range-selector" className="h-8 border-[var(--fm-line)] bg-[var(--fm-surface)] px-3 font-mono text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="border-[var(--fm-line)] bg-[var(--fm-surface)] font-mono text-xs">
+              <SelectItem value="7">Last 7 days</SelectItem>
+              <SelectItem value="30">Last 30 days</SelectItem>
+              <SelectItem value="60">Last 60 days</SelectItem>
+              <SelectItem value="90">Last 90 days</SelectItem>
+            </SelectContent>
+          </Select>
+
           {canRecord && activeOrg && (
-            <Button
+            <button
               onClick={() => setRecordOpen(true)}
-              size="sm"
-              className="h-9 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl"
+              className="fm-btn-accent flex items-center gap-1.5"
+              style={{ fontSize: 12, padding: '6px 14px' }}
             >
-              Record Deployment
-            </Button>
+              <Plus className="h-4 w-4" />
+              <span>Record Deployment</span>
+            </button>
           )}
         </div>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2">
         <DeploymentFrequency
           data={freqQuery.data ?? []}
           isLoading={freqQuery.isLoading}

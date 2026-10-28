@@ -16,7 +16,7 @@ export default function DashboardLayout({
 }) {
   const router = useRouter()
   const params = useParams()
-  const { isAuthenticated } = useAuthStore()
+  const { isAuthenticated, fetchMe } = useAuthStore()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
 
@@ -27,9 +27,13 @@ export default function DashboardLayout({
     setMounted(true)
     const token = localStorage.getItem('accessToken')
     if (!isAuthenticated && !token) {
-      router.replace('/login')
+      const currentPath = window.location.pathname + window.location.search
+      const returnUrl = currentPath && currentPath !== '/login' ? `?redirect=${encodeURIComponent(currentPath)}` : ''
+      router.replace(`/login${returnUrl}`)
+    } else {
+      fetchMe()
     }
-  }, [isAuthenticated, router])
+  }, [isAuthenticated, router, fetchMe])
 
   if (!mounted) {
     return null

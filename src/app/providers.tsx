@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ThemeProvider } from 'next-themes'
 
 function makeQueryClient() {
   return new QueryClient({
@@ -36,15 +35,8 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   }, [])
 
   return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="dark"
-      enableSystem={false}
-      disableTransitionOnChange
-    >
-      <QueryClientProvider client={queryClient}>
-        {mounted ? children : <div style={{ visibility: 'hidden' }}>{children}</div>}
-      </QueryClientProvider>
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      {mounted ? children : <div style={{ visibility: 'hidden' }}>{children}</div>}
+    </QueryClientProvider>
   )
-}
+}

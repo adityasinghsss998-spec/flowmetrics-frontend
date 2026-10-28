@@ -11,8 +11,6 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts'
-import { Timer, Zap, TrendingDown, TrendingUp } from 'lucide-react'
-import { cn } from '@/lib/utils'
 
 interface Props {
   trend: BuildDurationPoint[]
@@ -33,16 +31,16 @@ function CustomTooltip({ active, payload, label }: {
 }) {
   if (!active || !payload?.length) return null
   return (
-    <div className="rounded-xl border border-white/[0.08] bg-zinc-900/95 p-3.5 shadow-2xl backdrop-blur-xl text-xs min-w-40">
-      <p className="font-semibold text-foreground mb-2 pb-2 border-b border-white/[0.06]">{label}</p>
-      <div className="space-y-1.5">
+    <div className="rounded-[4px] border border-[var(--fm-line)] bg-[var(--fm-surface)] p-3 text-xs min-w-40">
+      <p className="font-mono font-medium text-[var(--fm-text)] mb-2 pb-1.5 border-b border-[var(--fm-line)]">{label}</p>
+      <div className="space-y-1">
         {payload.map((item) => (
-          <div key={item.name} className="flex items-center justify-between gap-5">
+          <div key={item.name} className="flex items-center justify-between gap-4">
             <span className="flex items-center gap-1.5">
-              <span className="h-1.5 w-4 rounded-full" style={{ backgroundColor: item.color }} />
-              <span className="text-muted-foreground">{item.name}</span>
+              <span className="h-1.5 w-3 rounded-[1px]" style={{ backgroundColor: item.color }} />
+              <span className="text-[var(--fm-text-muted)]">{item.name}</span>
             </span>
-            <span className="font-semibold text-foreground tabular-nums">{item.value != null ? `${item.value}m` : '—'}</span>
+            <span className="font-mono font-medium text-[var(--fm-text)] tabular-nums">{item.value != null ? `${item.value}m` : '-'}</span>
           </div>
         ))}
       </div>
@@ -53,27 +51,13 @@ function CustomTooltip({ active, payload, label }: {
 function CustomLegend({ payload }: { payload?: { color: string; value: string }[] }) {
   if (!payload) return null
   return (
-    <div className="flex items-center justify-center gap-5 pt-3">
+    <div className="flex items-center justify-center gap-6 pt-3">
       {payload.map((entry) => (
         <div key={entry.value} className="flex items-center gap-1.5">
-          <span className="h-1 w-5 rounded-full" style={{ backgroundColor: entry.color }} />
-          <span className="text-[11px] text-muted-foreground/70">{entry.value}</span>
+          <span className="h-1 w-4 rounded-[1px]" style={{ backgroundColor: entry.color }} />
+          <span className="font-mono text-[11px] text-[var(--fm-text-muted)]">{entry.value}</span>
         </div>
       ))}
-    </div>
-  )
-}
-
-function SummaryCard({ label, value, unit, icon: Icon, color }: { label: string; value: number | null; unit: string; icon: React.ComponentType<{ className?: string }>; color: string }) {
-  return (
-    <div className={cn('flex items-center gap-2.5 rounded-xl border px-3 py-2.5', color)}>
-      <Icon className="h-3.5 w-3.5 shrink-0 opacity-70" />
-      <div className="min-w-0">
-        <p className="text-[10px] text-muted-foreground/60 truncate">{label}</p>
-        <p className="text-sm font-bold text-foreground tabular-nums">
-          {value != null ? `${Number(Number(value).toFixed(1))}${unit}` : '—'}
-        </p>
-      </div>
     </div>
   )
 }
@@ -87,49 +71,53 @@ export default function BuildDurationTrend({ trend, summary, isLoading }: Props)
   }))
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-xl">
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-500/40 to-transparent" />
-      <div className="absolute -top-10 right-1/4 h-28 w-40 rounded-full bg-amber-500/5 blur-3xl pointer-events-none" />
-
-      <div className="px-5 pt-5 pb-4">
-        <div className="flex items-center gap-2 mb-1">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-amber-500/20 bg-amber-500/10">
-            <Timer className="h-3.5 w-3.5 text-amber-400" />
-          </div>
-          <span className="text-sm font-semibold text-foreground">Build Duration Trend</span>
+    <div className="rounded-[4px] border border-[var(--fm-line)] bg-[var(--fm-surface-raised)] p-5">
+      <div className="flex items-center justify-between mb-1 pb-3 border-b border-[var(--fm-line)]/50">
+        <div>
+          <h3 className="font-mono text-sm font-medium text-[var(--fm-text)]">Build duration trend</h3>
+          <p className="text-xs text-[var(--fm-text-muted)] mt-0.5">Average build duration in minutes</p>
         </div>
-        <p className="text-[11px] text-muted-foreground/50 ml-9">Weekly average build times with rolling average</p>
       </div>
 
       {!isLoading && summary && (
-        <div className="px-5 pb-4 grid grid-cols-2 sm:grid-cols-4 gap-2">
-          <SummaryCard label="Avg Build" value={summary.avg_build_minutes} unit="m" icon={Timer} color="border-amber-500/15 bg-amber-500/5 text-amber-400" />
-          <SummaryCard label="Fastest" value={summary.fastest_build_minutes} unit="m" icon={Zap} color="border-emerald-500/15 bg-emerald-500/5 text-emerald-400" />
-          <SummaryCard label="Slowest" value={summary.slowest_build_minutes} unit="m" icon={TrendingUp} color="border-red-500/15 bg-red-500/5 text-red-400" />
-          <SummaryCard label="Success Rate" value={summary.total_deployments > 0 ? (summary.successful / summary.total_deployments) * 100 : null} unit="%" icon={TrendingDown} color="border-indigo-500/15 bg-indigo-500/5 text-indigo-400" />
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 my-3">
+          <div className="p-3 rounded-[4px] border border-[var(--fm-line)] bg-[var(--fm-surface)]">
+            <p className="font-mono text-xs text-[var(--fm-text-muted)]">Current average</p>
+            <p className="font-mono text-base font-semibold text-[var(--fm-text)] tabular-nums mt-0.5">
+              {summary.avg_build_minutes != null ? `${Number(summary.avg_build_minutes).toFixed(1)}m` : '-'}
+            </p>
+          </div>
+          <div className="p-3 rounded-[4px] border border-[var(--fm-line)] bg-[var(--fm-surface)]">
+            <p className="font-mono text-xs text-[var(--fm-text-muted)]">Fastest build</p>
+            <p className="font-mono text-base font-semibold text-[var(--fm-text)] tabular-nums mt-0.5">
+              {summary.fastest_build_minutes != null ? `${Number(summary.fastest_build_minutes).toFixed(1)}m` : '-'}
+            </p>
+          </div>
+          <div className="p-3 rounded-[4px] border border-[var(--fm-line)] bg-[var(--fm-surface)] col-span-2 sm:col-span-1">
+            <p className="font-mono text-xs text-[var(--fm-text-muted)]">Slowest build</p>
+            <p className="font-mono text-base font-semibold text-[var(--fm-text)] tabular-nums mt-0.5">
+              {summary.slowest_build_minutes != null ? `${Number(summary.slowest_build_minutes).toFixed(1)}m` : '-'}
+            </p>
+          </div>
         </div>
       )}
 
-      <div className="px-2 pb-4">
+      <div className="pt-2">
         {isLoading ? (
-          <div className="space-y-3 px-3 pb-3">
-            <div className="grid grid-cols-4 gap-2 mb-4">
-              {[1, 2, 3, 4].map((i) => <div key={i} className="h-14 rounded-xl bg-white/[0.03] animate-pulse" />)}
-            </div>
-            <div className="h-52 w-full rounded-xl bg-white/[0.03] animate-pulse" />
+          <div className="space-y-3">
+            <div className="h-56 w-full rounded-[4px] bg-[var(--fm-surface)] animate-pulse" />
           </div>
         ) : trend.length === 0 ? (
-          <div className="flex h-52 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-white/[0.05] mx-3 mb-3">
-            <Timer className="h-7 w-7 text-muted-foreground/20" />
-            <p className="text-sm text-muted-foreground/50">No build duration data</p>
+          <div className="flex h-56 flex-col items-center justify-center gap-2 border border-dashed border-[var(--fm-line)] rounded-[4px]">
+            <p className="font-mono text-xs text-[var(--fm-text-muted)]">No build duration data for this period</p>
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height={230}>
+          <ResponsiveContainer width="100%" height={240}>
             <LineChart data={chartData} margin={{ top: 8, right: 12, left: -20, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+              <CartesianGrid strokeDasharray="2 2" stroke="var(--fm-line)" vertical={false} />
               <XAxis
                 dataKey="week"
-                tick={{ fontSize: 10, fill: '#64748b' }}
+                tick={{ fontSize: 10, fill: '#A0A498', fontFamily: 'var(--font-ibm-plex-mono)' }}
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={(v) => {
@@ -137,12 +125,37 @@ export default function BuildDurationTrend({ trend, summary, isLoading }: Props)
                   return `${d.getMonth() + 1}/${d.getDate()}`
                 }}
               />
-              <YAxis tick={{ fontSize: 10, fill: '#64748b' }} tickLine={false} axisLine={false} unit="m" />
-              <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.06)', strokeWidth: 1 }} />
+              <YAxis
+                tick={{ fontSize: 10, fill: '#A0A498', fontFamily: 'var(--font-ibm-plex-mono)' }}
+                tickLine={false}
+                axisLine={false}
+                unit="m"
+              />
+              <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'var(--fm-line)', strokeWidth: 1 }} />
               <Legend content={<CustomLegend />} />
-              <Line type="monotone" dataKey="Avg Build" stroke="#f59e0b" strokeWidth={2.5} dot={false} activeDot={{ r: 5, fill: '#f59e0b' }} connectNulls />
-              <Line type="monotone" dataKey="4-Week Avg" stroke="#a78bfa" strokeWidth={2} strokeDasharray="5 3" dot={false} activeDot={{ r: 4 }} connectNulls />
-              <Line type="monotone" dataKey="Fastest" stroke="#10b981" strokeWidth={1.5} dot={false} activeDot={{ r: 3 }} connectNulls />
+              <Line
+                type="monotone"
+                dataKey="Avg Build"
+                stroke="var(--fm-accent)"
+                strokeWidth={2}
+                dot={false}
+                activeDot={{ r: 4, fill: 'var(--fm-accent)', strokeWidth: 0 }}
+              />
+              <Line
+                type="monotone"
+                dataKey="4-Week Avg"
+                stroke="var(--fm-text-muted)"
+                strokeWidth={1.5}
+                strokeDasharray="3 3"
+                dot={false}
+              />
+              <Line
+                type="monotone"
+                dataKey="Fastest"
+                stroke="var(--fm-status-good)"
+                strokeWidth={1.5}
+                dot={false}
+              />
             </LineChart>
           </ResponsiveContainer>
         )}

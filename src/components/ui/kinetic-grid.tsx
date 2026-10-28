@@ -176,12 +176,6 @@ export default function KineticGrid({
     }
   }, [getWarpedPoint, globalColor]);
 
-  const animate = useCallback((now: number) => {
-    const m = mouseRef.current; const t = targetMouseRef.current;
-    m.x = lerpN(m.x, t.x, LERP_SPEED); m.y = lerpN(m.y, t.y, LERP_SPEED);
-    draw(now); rafRef.current = requestAnimationFrame(animate);
-  }, [draw]);
-
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -204,6 +198,24 @@ export default function KineticGrid({
     };
     window.addEventListener("mousemove", onMove);
     window.addEventListener("click", onClick);
+
+    let isMoving = false;
+    const animate = (now: number) => {
+      const m = mouseRef.current;
+      const t = targetMouseRef.current;
+      const dx = Math.abs(m.x - t.x);
+      const dy = Math.abs(m.y - t.y);
+
+      // Only draw if mouse is moving, ripples are alive, or initial frame
+      if (dx > 0.1 || dy > 0.1 || ripplesRef.current.length > 0 || !isMoving) {
+        m.x = lerpN(m.x, t.x, LERP_SPEED);
+        m.y = lerpN(m.y, t.y, LERP_SPEED);
+        draw(now);
+        isMoving = dx > 0.1 || dy > 0.1 || ripplesRef.current.length > 0;
+      }
+      rafRef.current = requestAnimationFrame(animate);
+    };
+
     rafRef.current = requestAnimationFrame(animate);
     return () => {
       window.removeEventListener("resize", setSize);
@@ -211,7 +223,7 @@ export default function KineticGrid({
       window.removeEventListener("click", onClick);
       cancelAnimationFrame(rafRef.current);
     };
-  }, [animate]);
+  }, [draw]);
 
   return (
     <div className={cn("relative w-full overflow-hidden bg-[#050510]", className)}>

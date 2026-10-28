@@ -3,24 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { usePathname, useParams, useRouter } from 'next/navigation'
-import { useQuery } from '@tanstack/react-query'
-import {
-  BarChart3,
-  LayoutDashboard,
-  Users,
-  Rocket,
-  GitPullRequest,
-  ChevronLeft,
-  ChevronRight,
-  X,
-  LogOut,
-  Building2,
-  GitBranch,
-  Clock,
-  Zap,
-  Settings,
-  UserCircle,
-} from 'lucide-react'
+import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,7 +13,8 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
-import RealtimeBadge from '@/components/layout/RealtimeBadge'
+import { closeSocket } from '@/hooks/useSocket'
+import { useQuery } from '@tanstack/react-query'
 import api from '@/lib/axios'
 import type { Organization, Repository } from '@/types/api'
 
@@ -42,7 +26,6 @@ interface SidebarProps {
 interface NavItem {
   label: string
   href: string
-  icon: React.ComponentType<{ className?: string }>
   exact?: boolean
 }
 
@@ -62,6 +45,16 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
   const params = useParams()
   const repoId = params?.repoId
   const { user, logout } = useAuthStore()
+
+  const handleSignOut = () => {
+    localStorage.removeItem('accessToken')
+    localStorage.removeItem('refreshToken')
+    localStorage.removeItem('githubToken')
+    localStorage.removeItem('flowmetrics-auth')
+    closeSocket()
+    logout()
+    window.location.href = '/'
+  }
 
   const orgsQuery = useQuery<OrgWithMembers[]>({
     queryKey: ['orgs'],
@@ -89,8 +82,8 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
     const sections: NavSection[] = [
       {
         items: [
-          { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, exact: true },
-          { label: 'Settings', href: '/settings', icon: Settings },
+          { label: 'Dashboard', href: '/dashboard', exact: true },
+          { label: 'Settings', href: '/settings' },
         ],
       },
     ]
@@ -99,10 +92,10 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
       sections.push({
         title: 'Analytics',
         items: [
-          { label: 'DORA Overview', href: `/repos/${repoId}`, icon: BarChart3, exact: true },
-          { label: 'Contributors', href: `/repos/${repoId}/contributors`, icon: Users },
-          { label: 'Deployments', href: `/repos/${repoId}/deployments`, icon: Rocket },
-          { label: 'Pull Requests', href: `/repos/${repoId}/prs`, icon: GitPullRequest },
+          { label: 'DORA overview', href: `/repos/${repoId}`, exact: true },
+          { label: 'Contributors', href: `/repos/${repoId}/contributors` },
+          { label: 'Deployments', href: `/repos/${repoId}/deployments` },
+          { label: 'Pull requests', href: `/repos/${repoId}/prs` },
         ],
       })
     }
@@ -120,24 +113,35 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
   }
 
   const sidebarContent = (
-    <div className="flex h-full flex-col">
-      <div className="flex h-14 items-center border-b border-border/50 px-4">
-        <Link href="/dashboard" className="flex items-center gap-2.5 min-w-0">
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-indigo-500 to-violet-600">
-            <BarChart3 className="h-4 w-4 text-white" />
-          </div>
-          {!collapsed && (
-            <span className="font-bold text-sm tracking-tight truncate">
-              Flow<span className="text-indigo-400">Metrics</span>
-            </span>
-          )}
+    <div className="flex h-full flex-col" style={{ background: 'var(--fm-surface)' }}>
+      {/* Wordmark */}
+      <div
+        className="flex h-14 items-center px-4"
+        style={{ borderBottom: '1px solid var(--fm-line)' }}
+      >
+        <Link
+          href="/dashboard"
+          className="fm-wordmark-link flex items-center gap-0 min-w-0"
+          style={{
+            fontFamily: 'var(--font-ibm-plex-mono)',
+            fontWeight: 600,
+            fontSize: 15,
+            color: 'var(--fm-text)',
+            letterSpacing: '-0.01em',
+            padding: '2px 6px',
+            borderRadius: 4,
+          }}
+        >
+          {!collapsed && <span>flowmetrics</span>}
+          {collapsed && <span>fm</span>}
         </Link>
 
         <button
           id="sidebar-collapse-toggle"
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           onClick={() => setCollapsed((v) => !v)}
-          className="ml-auto hidden h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors lg:flex"
+          className="fm-btn-quiet ml-auto hidden h-6 w-6 shrink-0 items-center justify-center lg:flex"
+          style={{ color: 'var(--fm-text-muted)', borderRadius: 4, padding: 0 }}
         >
           {collapsed ? (
             <ChevronRight className="h-3.5 w-3.5" />
@@ -151,46 +155,62 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
             id="sidebar-mobile-close"
             aria-label="Close sidebar"
             onClick={onMobileClose}
-            className="ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors lg:hidden"
+            className="fm-btn-quiet ml-auto flex h-6 w-6 shrink-0 items-center justify-center lg:hidden"
+            style={{ color: 'var(--fm-text-muted)', borderRadius: 4, padding: 0 }}
           >
             <X className="h-4 w-4" />
           </button>
         )}
       </div>
 
+      {/* Org name */}
       {!collapsed && activeOrg && (
-        <div className="border-b border-border/30 px-3 py-3">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-indigo-500/20 bg-indigo-500/10">
-              <Building2 className="h-3.5 w-3.5 text-indigo-400" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-xs font-semibold text-foreground">{activeOrg.name}</p>
-              <p className="truncate text-[10px] text-muted-foreground/60">{activeOrg.slug}</p>
-            </div>
-          </div>
-          {activeOrg.members && activeOrg.members.length > 0 && (
-            <div className="mt-2 flex items-center gap-1.5">
-              <Users className="h-3 w-3 text-muted-foreground/40" />
-              <span className="text-[10px] text-muted-foreground/50">
-                {activeOrg.members.length} {activeOrg.members.length === 1 ? 'member' : 'members'}
-              </span>
-            </div>
+        <div
+          className="px-4 py-3"
+          style={{ borderBottom: '1px solid var(--fm-line)' }}
+        >
+          <p
+            style={{
+              fontFamily: 'var(--font-ibm-plex-mono)',
+              fontSize: 12,
+              fontWeight: 500,
+              color: 'var(--fm-text)',
+              marginBottom: 2,
+            }}
+          >
+            {activeOrg.name}
+          </p>
+          {activeOrg.slug && (
+            <p style={{ fontSize: 11, color: 'var(--fm-text-muted)', opacity: 0.6 }}>
+              {activeOrg.slug}
+            </p>
           )}
         </div>
       )}
 
-      <nav className="flex-1 overflow-y-auto py-3 px-2" aria-label="Main navigation">
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto py-3 px-3" aria-label="Main navigation">
         {navSections.map((section, sectionIdx) => (
-          <div key={sectionIdx} className={cn('mb-3', sectionIdx > 0 && 'border-t border-border/30 pt-3')}>
+          <div
+            key={sectionIdx}
+            className={cn('mb-4', sectionIdx > 0 && 'pt-3')}
+            style={sectionIdx > 0 ? { borderTop: '1px solid var(--fm-line)' } : undefined}
+          >
             {section.title && !collapsed && (
-              <p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+              <p
+                className="mb-1 px-2"
+                style={{
+                  fontFamily: 'var(--font-ibm-plex-mono)',
+                  fontSize: 11,
+                  fontWeight: 500,
+                  color: 'var(--fm-text-muted)',
+                }}
+              >
                 {section.title}
               </p>
             )}
             <ul className="space-y-0.5">
               {section.items.map((item) => {
-                const Icon = item.icon
                 const active = isActive(item)
                 return (
                   <li key={item.href + item.label}>
@@ -198,23 +218,22 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
                       href={item.href}
                       title={collapsed ? item.label : undefined}
                       className={cn(
-                        'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all',
-                        collapsed ? 'justify-center px-2' : '',
-                        active
-                          ? 'bg-indigo-600/15 text-indigo-400 shadow-sm'
-                          : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+                        'flex items-center rounded px-2 py-2 text-sm transition-colors',
+                        collapsed ? 'justify-center' : '',
+                        !active && 'fm-sidebar-link'
                       )}
+                      style={{
+                        fontFamily: 'var(--font-ibm-plex-mono)',
+                        fontWeight: active ? 600 : 400,
+                        color: active ? 'var(--fm-text)' : undefined,
+                        background: active ? 'var(--fm-surface-raised)' : undefined,
+                        borderRadius: 4,
+                        fontSize: 13,
+                        border: active ? '1px solid var(--fm-line)' : '1px solid transparent',
+                        width: '100%',
+                      }}
                     >
-                      <Icon
-                        className={cn(
-                          'h-4 w-4 shrink-0',
-                          active ? 'text-indigo-400' : 'text-muted-foreground'
-                        )}
-                      />
-                      {!collapsed && <span className="truncate">{item.label}</span>}
-                      {active && !collapsed && (
-                        <span className="ml-auto h-1.5 w-1.5 rounded-full bg-indigo-500" />
-                      )}
+                      <span className={cn(collapsed ? 'sr-only' : 'truncate')}>{item.label}</span>
                     </Link>
                   </li>
                 )
@@ -224,9 +243,17 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
         ))}
 
         {!collapsed && recentRepos.length > 0 && (
-          <div className="border-t border-border/30 pt-3 mt-3">
-            <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60">
-              Recent Repos
+          <div className="pt-3 mt-1" style={{ borderTop: '1px solid var(--fm-line)' }}>
+            <p
+              className="mb-1 px-2"
+              style={{
+                fontFamily: 'var(--font-ibm-plex-mono)',
+                fontSize: 11,
+                fontWeight: 500,
+                color: 'var(--fm-text-muted)',
+              }}
+            >
+              Recent
             </p>
             <ul className="space-y-0.5">
               {recentRepos.map((repo) => (
@@ -234,20 +261,19 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
                   <Link
                     href={`/repos/${repo.id}`}
                     className={cn(
-                      'flex items-center gap-2.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all',
-                      pathname === `/repos/${repo.id}`
-                        ? 'bg-indigo-600/10 text-indigo-400'
-                        : 'text-muted-foreground/70 hover:bg-accent/50 hover:text-foreground'
+                      'flex items-center rounded px-2 py-1.5 text-xs transition-colors',
+                      pathname !== `/repos/${repo.id}` && 'fm-sidebar-link'
                     )}
+                    style={{
+                      fontFamily: 'var(--font-ibm-plex-mono)',
+                      color: pathname === `/repos/${repo.id}` ? 'var(--fm-text)' : undefined,
+                      background: pathname === `/repos/${repo.id}` ? 'var(--fm-surface-raised)' : undefined,
+                      borderRadius: 4,
+                      border: pathname === `/repos/${repo.id}` ? '1px solid var(--fm-line)' : '1px solid transparent',
+                      width: '100%',
+                    }}
                   >
-                    <GitBranch className="h-3 w-3 shrink-0 text-muted-foreground/40" />
                     <span className="truncate">{repo.name}</span>
-                    {repo.last_synced_at && (
-                      <span className="ml-auto flex items-center gap-0.5 text-[9px] text-muted-foreground/40">
-                        <Clock className="h-2.5 w-2.5" />
-                        {new Date(repo.last_synced_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                      </span>
-                    )}
                   </Link>
                 </li>
               ))}
@@ -256,70 +282,77 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
         )}
       </nav>
 
-      <div className="border-t border-border/50 p-2 space-y-2">
-        {!collapsed && (
-          <div className="px-2 mt-2">
-            <div className="mb-3 rounded-xl border border-red-500/20 bg-gradient-to-br from-red-500/10 to-transparent p-3 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-2 opacity-50 group-hover:opacity-100 transition-opacity">
-                <Zap className="h-4 w-4 text-red-400" />
-              </div>
-              <h4 className="text-xs font-semibold text-white mb-1">Webhook Events</h4>
-              <p className="text-[10px] text-muted-foreground mb-3">Approaching monthly limit</p>
-              <div className="h-1.5 w-full bg-black/50 rounded-full overflow-hidden mb-1.5">
-                <div className="h-full bg-gradient-to-r from-red-500 to-rose-400 w-[85%] rounded-full shadow-[0_0_10px_rgba(239,68,68,0.5)]" />
-              </div>
-              <p className="text-[9px] font-medium text-red-400/80">85% quota reached</p>
-            </div>
-            <RealtimeBadge className="w-full justify-center" />
-          </div>
-        )}
-        {collapsed && (
-          <div className="flex justify-center px-1">
-            <RealtimeBadge compact />
-          </div>
-        )}
-
+      {/* User menu */}
+      <div className="p-2" style={{ borderTop: '1px solid var(--fm-line)' }}>
         <DropdownMenu>
           <DropdownMenuTrigger
             className={cn(
-              'flex w-full items-center gap-3 rounded-md px-3 py-2 text-left hover:bg-accent/50 transition-colors',
-              collapsed ? 'justify-center px-2' : ''
+              'fm-btn-quiet flex w-full items-center gap-3 rounded px-2 py-2 text-left',
+              collapsed ? 'justify-center' : '',
             )}
+            style={{ borderRadius: 4, outline: 'none', border: '1px solid transparent' }}
           >
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-red-600/20 border border-red-500/30">
-              <span className="text-xs font-semibold text-red-400">
-                {user?.name?.[0]?.toUpperCase() ?? 'U'}
-              </span>
+            <div
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded"
+              style={{
+                background: 'var(--fm-surface-raised)',
+                border: '1px solid var(--fm-line)',
+                fontFamily: 'var(--font-ibm-plex-mono)',
+                fontSize: 12,
+                fontWeight: 600,
+                color: 'var(--fm-text)',
+                borderRadius: 4,
+              }}
+            >
+              {user?.name?.[0]?.toUpperCase() ?? 'U'}
             </div>
             {!collapsed && (
               <div className="min-w-0 flex-1">
-                <p className="truncate text-xs font-medium text-foreground">{user?.name ?? 'User'}</p>
-                <p className="truncate text-[10px] text-muted-foreground">{user?.email ?? ''}</p>
-              </div>
-            )}
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56 bg-background/95 backdrop-blur border-border/50">
-            <div className="px-2 py-1.5 text-sm font-normal">
-              <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">{user?.name ?? 'User'}</p>
-                <p className="text-xs leading-none text-muted-foreground">
+                <p
+                  className="truncate text-xs font-medium"
+                  style={{ fontFamily: 'var(--font-ibm-plex-mono)', color: 'inherit', fontSize: 12 }}
+                >
+                  {user?.name ?? 'User'}
+                </p>
+                <p className="truncate text-xs" style={{ color: 'var(--fm-text-muted)', fontSize: 11 }}>
                   {user?.email ?? ''}
                 </p>
               </div>
+            )}
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="end"
+            className="w-56"
+            style={{
+              background: 'var(--fm-surface-raised)',
+              border: '1px solid var(--fm-line)',
+              borderRadius: 4,
+            }}
+          >
+            <div className="px-2 py-1.5">
+              <p className="text-sm font-medium" style={{ color: 'var(--fm-text)' }}>
+                {user?.name ?? 'User'}
+              </p>
+              <p className="text-xs" style={{ color: 'var(--fm-text-muted)' }}>
+                {user?.email ?? ''}
+              </p>
             </div>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="cursor-pointer">
-              <UserCircle className="mr-2 h-4 w-4" />
-              <span>Profile</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => router.push('/settings')} className="cursor-pointer">
-              <Settings className="mr-2 h-4 w-4" />
+            <DropdownMenuSeparator style={{ background: 'var(--fm-line)' }} />
+            <DropdownMenuItem
+              onClick={() => router.push('/settings')}
+              className="fm-sidebar-link cursor-pointer text-sm w-full px-2 py-1.5"
+              style={{ color: 'var(--fm-text)', border: 'none' }}
+            >
               <span>Settings</span>
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={logout} className="text-red-400 focus:text-red-400 focus:bg-red-400/10 cursor-pointer">
-              <LogOut className="mr-2 h-4 w-4" />
-              <span>Log out</span>
+            <DropdownMenuSeparator style={{ background: 'var(--fm-line)' }} />
+            <DropdownMenuItem
+              id="sidebar-signout-button"
+              onClick={handleSignOut}
+              className="fm-btn-destructive cursor-pointer text-sm w-full px-2 py-1.5 justify-start"
+              style={{ border: 'none' }}
+            >
+              <span>Sign out</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -332,9 +365,10 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
       <aside
         id="desktop-sidebar"
         className={cn(
-          'hidden lg:flex flex-col border-r border-border/50 bg-background/95 backdrop-blur transition-all duration-300 shrink-0',
-          collapsed ? 'w-[56px]' : 'w-[240px]'
+          'hidden lg:flex flex-col shrink-0 transition-all duration-200',
+          collapsed ? 'w-[56px]' : 'w-[220px]',
         )}
+        style={{ borderRight: '1px solid var(--fm-line)', background: 'var(--fm-surface)' }}
         aria-label="Sidebar"
       >
         {sidebarContent}
@@ -343,7 +377,8 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
       {mobileOpen && (
         <div
           id="sidebar-backdrop"
-          className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-40 lg:hidden"
+          style={{ background: 'rgba(11,12,10,0.7)' }}
           aria-hidden="true"
           onClick={onMobileClose}
         />
@@ -352,9 +387,10 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }: SidebarPr
       <aside
         id="mobile-sidebar"
         className={cn(
-          'fixed inset-y-0 left-0 z-50 flex w-[240px] flex-col border-r border-border/50 bg-background transition-transform duration-300 lg:hidden',
-          mobileOpen ? 'translate-x-0' : '-translate-x-full'
+          'fixed inset-y-0 left-0 z-50 flex w-[220px] flex-col lg:hidden transition-transform duration-200',
+          mobileOpen ? 'translate-x-0' : '-translate-x-full',
         )}
+        style={{ borderRight: '1px solid var(--fm-line)', background: 'var(--fm-surface)' }}
         aria-label="Mobile sidebar"
       >
         {sidebarContent}

@@ -4,14 +4,12 @@ import * as React from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Users,
-  Mail,
+  User,
   Shield,
   Trash2,
   MoreVertical,
-  Clock,
   GitBranch,
   Send,
-  UserPlus,
   Loader2,
   AlertCircle,
   CheckCircle2,
@@ -26,14 +24,6 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -47,7 +37,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 interface Member {
   id: number
@@ -115,7 +104,7 @@ export function MembersTab() {
     onSuccess: () => {
       setInviteEmail('')
       setInviteRole('member')
-      setInviteFeedback({ type: 'success', message: 'Invitation sent successfully.' })
+      setInviteFeedback({ type: 'success', message: 'Invitation sent.' })
       queryClient.invalidateQueries({ queryKey: ['org-invitations', orgId] })
       setTimeout(() => setInviteFeedback(null), 4000)
     },
@@ -169,333 +158,329 @@ export function MembersTab() {
   return (
     <div className="space-y-8">
       {canInvite && (
-        <Card className="border-border/50 bg-card/60 backdrop-blur-xl">
-          <CardHeader className="pb-4">
-            <div className="flex items-center gap-2">
-              <UserPlus className="h-5 w-5 text-indigo-400" />
-              <CardTitle className="text-base font-semibold">Invite Team Member</CardTitle>
-            </div>
-            <CardDescription className="text-xs text-muted-foreground">
-              Invite developers or team administrators to join {activeOrg?.name || 'your organization'}.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleInviteSubmit} className="space-y-4">
-              <div className="flex flex-col sm:flex-row gap-3">
-                <div className="relative flex-1">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
-                  <Input
-                    type="email"
-                    placeholder="colleague@company.com"
-                    value={inviteEmail}
-                    onChange={(e) => setInviteEmail(e.target.value)}
-                    required
-                    disabled={inviteMutation.isPending}
-                    className="pl-9 bg-background/50 border-border/50 text-sm"
-                  />
-                </div>
-                <div className="w-full sm:w-36">
-                  <Select
-                    value={inviteRole}
-                    onValueChange={(val) => setInviteRole(val as 'member' | 'admin')}
-                    disabled={inviteMutation.isPending}
-                  >
-                    <SelectTrigger className="w-full bg-background/50 border-border/50 text-sm">
-                      <SelectValue placeholder="Role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="member">Member</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button
-                  type="submit"
-                  disabled={inviteMutation.isPending || !inviteEmail.trim()}
-                  className="bg-indigo-600 hover:bg-indigo-500 text-white gap-2 text-sm font-medium px-5"
-                >
-                  {inviteMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Send className="h-4 w-4" />
-                  )}
-                  Send Invite
-                </Button>
-              </div>
+        <div className="rounded-[4px] border border-[var(--fm-line)] bg-[var(--fm-surface-raised)] p-5">
+          <div className="mb-4 pb-3 border-b border-[var(--fm-line)]/50">
+            <h3 className="font-mono text-sm font-medium text-[var(--fm-text)]">Invite Team Member</h3>
+            <p className="text-xs text-[var(--fm-text-muted)] mt-0.5">
+              Add collaborators to {activeOrg?.name || 'this organization'}.
+            </p>
+          </div>
 
-              {inviteFeedback && (
-                <div
-                  className={`flex items-center gap-2 text-xs p-2.5 rounded-lg border ${
-                    inviteFeedback.type === 'success'
-                      ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
-                      : 'border-red-500/30 bg-red-500/10 text-red-400'
-                  }`}
+          <form onSubmit={handleInviteSubmit} className="space-y-3">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex-1">
+                <Input
+                  type="email"
+                  placeholder="collaborator@company.com"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  disabled={inviteMutation.isPending}
+                  className="h-8 border-[var(--fm-line)] bg-[var(--fm-surface)] font-mono text-xs"
+                />
+              </div>
+              <div className="w-full sm:w-36">
+                <Select
+                  value={inviteRole}
+                  onValueChange={(val) => setInviteRole(val as 'member' | 'admin')}
+                  disabled={inviteMutation.isPending}
                 >
-                  {inviteFeedback.type === 'success' ? (
-                    <CheckCircle2 className="h-4 w-4 shrink-0" />
-                  ) : (
-                    <AlertCircle className="h-4 w-4 shrink-0" />
-                  )}
-                  <span>{inviteFeedback.message}</span>
-                </div>
-              )}
-            </form>
-          </CardContent>
-        </Card>
+                  <SelectTrigger className="h-8 w-full border-[var(--fm-line)] bg-[var(--fm-surface)] font-mono text-xs">
+                    <SelectValue placeholder="Role" />
+                  </SelectTrigger>
+                  <SelectContent className="border-[var(--fm-line)] bg-[var(--fm-surface)] font-mono text-xs">
+                    <SelectItem value="member">Member</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button
+                type="submit"
+                disabled={inviteMutation.isPending || !inviteEmail.trim()}
+                size="sm"
+                className="gap-2 shrink-0"
+              >
+                {inviteMutation.isPending ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Send className="h-3.5 w-3.5" />
+                )}
+                Send Invite
+              </Button>
+            </div>
+
+            {inviteFeedback && (
+              <div
+                className={`flex items-center gap-2 font-mono text-xs p-2 rounded-[2px] border ${
+                  inviteFeedback.type === 'success'
+                    ? 'border-[var(--fm-status-good)]/30 text-[var(--fm-status-good)] bg-[var(--fm-status-good)]/5'
+                    : 'border-[var(--fm-status-poor)]/30 text-[var(--fm-status-poor)] bg-[var(--fm-status-poor)]/5'
+                }`}
+              >
+                {inviteFeedback.type === 'success' ? (
+                  <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                ) : (
+                  <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                )}
+                <span>{inviteFeedback.message}</span>
+              </div>
+            )}
+          </form>
+        </div>
       )}
 
-      <Card className="border-border/50 bg-card/60 backdrop-blur-xl">
-        <CardHeader className="pb-3 flex flex-row items-center justify-between">
+      {/* Active Members */}
+      <div className="rounded-[4px] border border-[var(--fm-line)] bg-[var(--fm-surface-raised)] overflow-hidden">
+        <div className="p-5 flex items-center justify-between border-b border-[var(--fm-line)]/50">
           <div>
-            <div className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-indigo-400" />
-              <CardTitle className="text-base font-semibold">Active Members</CardTitle>
-            </div>
-            <CardDescription className="text-xs text-muted-foreground mt-1">
+            <h3 className="font-mono text-sm font-medium text-[var(--fm-text)]">Active Members</h3>
+            <p className="text-xs text-[var(--fm-text-muted)] mt-0.5">
               People who have access to this organization and its analytics.
-            </CardDescription>
+            </p>
           </div>
-          <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-muted text-muted-foreground border border-border/50">
+          <span className="font-mono text-xs text-[var(--fm-text-muted)] px-2 py-0.5 rounded-[2px] border border-[var(--fm-line)] bg-[var(--fm-surface)]">
             {members.length} {members.length === 1 ? 'member' : 'members'}
           </span>
-        </CardHeader>
-        <CardContent className="p-0">
+        </div>
+
+        <div>
           {membersQuery.isLoading ? (
-            <div className="flex items-center justify-center p-8 text-sm text-muted-foreground gap-2">
-              <Loader2 className="h-4 w-4 animate-spin text-indigo-400" />
-              <span>Loading members…</span>
+            <div className="p-5 space-y-2">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-10 rounded-[4px] bg-[var(--fm-surface)] animate-pulse" />
+              ))}
             </div>
           ) : members.length === 0 ? (
-            <div className="p-8 text-center text-sm text-muted-foreground">
+            <div className="p-8 text-center text-xs text-[var(--fm-text-muted)]">
               No members found in this organization.
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow className="border-border/40 hover:bg-transparent">
-                  <TableHead className="text-xs font-semibold text-muted-foreground pl-6">Member</TableHead>
-                  <TableHead className="text-xs font-semibold text-muted-foreground">GitHub</TableHead>
-                  <TableHead className="text-xs font-semibold text-muted-foreground">Role</TableHead>
-                  <TableHead className="text-xs font-semibold text-muted-foreground">Joined</TableHead>
-                  {isOwner && <TableHead className="text-xs font-semibold text-muted-foreground text-right pr-6">Actions</TableHead>}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {members.map((member) => {
-                  const isCurrent = currentUser?.id === member.id
-                  const isOrgOwner = member.role === 'owner'
+            <div className="overflow-x-auto">
+              <table className="fm-table">
+                <thead>
+                  <tr>
+                    <th>Member</th>
+                    <th>GitHub</th>
+                    <th>Role</th>
+                    <th>Joined</th>
+                    {isOwner && <th className="text-right pr-5">Actions</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {members.map((member) => {
+                    const isCurrent = currentUser?.id === member.id
+                    const isOrgOwner = member.role === 'owner'
 
-                  return (
-                    <TableRow key={member.id} className="border-border/30 hover:bg-muted/30">
-                      <TableCell className="pl-6 py-3">
-                        <div className="flex items-center gap-3">
-                          <Avatar size="sm">
-                            <AvatarFallback>
-                              {member.name ? member.name.charAt(0) : 'U'}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-medium text-foreground truncate">
-                                {member.name}
-                              </span>
-                              {isCurrent && (
-                                <span className="text-[10px] bg-indigo-500/10 text-indigo-400 px-1.5 py-0.2 rounded border border-indigo-500/20">
-                                  You
+                    return (
+                      <tr key={member.id}>
+                        <td>
+                          <div className="flex items-center gap-3">
+                            <Avatar size="sm">
+                              <AvatarFallback className="font-mono text-xs bg-[var(--fm-surface)] text-[var(--fm-text)] border border-[var(--fm-line)]">
+                                {member.name ? member.name.charAt(0).toUpperCase() : 'U'}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium text-[var(--fm-text)] truncate">
+                                  {member.name}
                                 </span>
-                              )}
+                                {isCurrent && (
+                                  <span className="font-mono text-[10px] text-[var(--fm-accent)] px-1 py-0.2 rounded-[2px] border border-[var(--fm-accent)]/30">
+                                    You
+                                  </span>
+                                )}
+                              </div>
+                              <p className="font-mono text-xs text-[var(--fm-text-muted)] truncate">{member.email}</p>
                             </div>
-                            <p className="text-xs text-muted-foreground truncate">{member.email}</p>
                           </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="py-3">
-                        {member.github_username ? (
-                          <a
-                            href={`https://github.com/${member.github_username}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-indigo-400 transition-colors"
-                          >
-                            <GitBranch className="h-3.5 w-3.5" />
-                            <span>{member.github_username}</span>
-                          </a>
-                        ) : (
-                          <span className="text-xs text-muted-foreground/40">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="py-3">
-                        <RoleBadge role={member.role} />
-                      </TableCell>
-                      <TableCell className="py-3 text-xs text-muted-foreground">
-                        {member.created_at
-                          ? new Date(member.created_at).toLocaleDateString(undefined, {
-                              year: 'numeric',
-                              month: 'short',
-                              day: 'numeric',
-                            })
-                          : '—'}
-                      </TableCell>
-                      {isOwner && (
-                        <TableCell className="py-3 text-right pr-6">
-                          {!isOrgOwner && !isCurrent ? (
-                            <DropdownMenu>
-                              <DropdownMenuTrigger className="h-8 w-8 inline-flex items-center justify-center rounded-md hover:bg-muted/80 text-muted-foreground hover:text-foreground cursor-pointer">
-                                <MoreVertical className="h-4 w-4" />
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-48 bg-card border-border/60">
-                                <div className="px-2 py-1.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                                  Change Role
-                                </div>
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    changeRoleMutation.mutate({
-                                      targetUserId: member.id,
-                                      newRole: 'admin',
-                                    })
-                                  }
-                                  disabled={member.role === 'admin' || changeRoleMutation.isPending}
-                                  className="cursor-pointer gap-2 text-xs"
-                                >
-                                  <Shield className="h-3.5 w-3.5 text-blue-400" />
-                                  <span>Make Admin</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    changeRoleMutation.mutate({
-                                      targetUserId: member.id,
-                                      newRole: 'member',
-                                    })
-                                  }
-                                  disabled={member.role === 'member' || changeRoleMutation.isPending}
-                                  className="cursor-pointer gap-2 text-xs"
-                                >
-                                  <Users className="h-3.5 w-3.5 text-slate-400" />
-                                  <span>Make Member</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                  onClick={() => removeMemberMutation.mutate(member.id)}
-                                  disabled={removeMemberMutation.isPending}
-                                  className="cursor-pointer gap-2 text-xs text-red-400 focus:text-red-400 focus:bg-red-500/10"
-                                >
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                  <span>Remove from Org</span>
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                        </td>
+                        <td>
+                          {member.github_username ? (
+                            <a
+                              href={`https://github.com/${member.github_username}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 font-mono text-xs text-[var(--fm-text-muted)] hover:text-[var(--fm-accent)] transition-colors"
+                            >
+                              <GitBranch className="h-3 w-3" />
+                              <span>{member.github_username}</span>
+                            </a>
                           ) : (
-                            <span className="text-xs text-muted-foreground/30">—</span>
+                            <span className="font-mono text-xs text-[var(--fm-text-muted)]">-</span>
                           )}
-                        </TableCell>
-                      )}
-                    </TableRow>
-                  )
-                })}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card className="border-border/50 bg-card/60 backdrop-blur-xl">
-        <CardHeader className="pb-3 flex flex-row items-center justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-indigo-400" />
-              <CardTitle className="text-base font-semibold">Pending Invitations</CardTitle>
+                        </td>
+                        <td>
+                          <RoleBadge role={member.role} />
+                        </td>
+                        <td className="font-mono text-xs text-[var(--fm-text-muted)]">
+                          {member.created_at
+                            ? new Date(member.created_at).toLocaleDateString(undefined, {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric',
+                              })
+                            : '-'}
+                        </td>
+                        {isOwner && (
+                          <td className="text-right pr-5">
+                            {!isOrgOwner && !isCurrent ? (
+                              <DropdownMenu>
+                                <DropdownMenuTrigger className="h-7 w-7 inline-flex items-center justify-center rounded-[2px] fm-btn-quiet cursor-pointer">
+                                  <MoreVertical className="h-3.5 w-3.5" />
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-48 bg-[var(--fm-surface-raised)] border border-[var(--fm-line)] rounded-[4px] p-1">
+                                  <div className="px-2 py-1 font-mono text-xs font-medium text-[var(--fm-text-muted)]">
+                                    Change role
+                                  </div>
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      changeRoleMutation.mutate({
+                                        targetUserId: member.id,
+                                        newRole: 'admin',
+                                      })
+                                    }
+                                    disabled={member.role === 'admin' || changeRoleMutation.isPending}
+                                    className="cursor-pointer gap-2 font-mono text-xs rounded-[2px] fm-sidebar-link px-2 py-1.5"
+                                  >
+                                    <Shield className="h-3 w-3" />
+                                    <span>Make admin</span>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      changeRoleMutation.mutate({
+                                        targetUserId: member.id,
+                                        newRole: 'member',
+                                      })
+                                    }
+                                    disabled={member.role === 'member' || changeRoleMutation.isPending}
+                                    className="cursor-pointer gap-2 font-mono text-xs rounded-[2px] fm-sidebar-link px-2 py-1.5"
+                                  >
+                                    <User className="h-3 w-3" />
+                                    <span>Make member</span>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator className="bg-[var(--fm-line)]" />
+                                  <DropdownMenuItem
+                                    onClick={() => removeMemberMutation.mutate(member.id)}
+                                    disabled={removeMemberMutation.isPending}
+                                    className="cursor-pointer gap-2 font-mono text-xs rounded-[2px] fm-btn-destructive px-2 py-1.5"
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                    <span>Remove from Org</span>
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            ) : (
+                              <span className="font-mono text-xs text-[var(--fm-text-muted)]/40">-</span>
+                            )}
+                          </td>
+                        )}
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
             </div>
-            <CardDescription className="text-xs text-muted-foreground mt-1">
-              Invitations that have been sent but not yet accepted.
-            </CardDescription>
+          )}
+        </div>
+      </div>
+
+      {/* Pending Invitations */}
+      <div className="rounded-[4px] border border-[var(--fm-line)] bg-[var(--fm-surface-raised)] overflow-hidden">
+        <div className="p-5 flex items-center justify-between border-b border-[var(--fm-line)]/50">
+          <div>
+            <h3 className="font-mono text-sm font-medium text-[var(--fm-text)]">Pending Invitations</h3>
+            <p className="text-xs text-[var(--fm-text-muted)] mt-0.5">
+              Invitations sent but not yet accepted.
+            </p>
           </div>
-          <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-muted text-muted-foreground border border-border/50">
-            {invitations.length} {invitations.length === 1 ? 'pending' : 'pending'}
+          <span className="font-mono text-xs text-[var(--fm-text-muted)] px-2 py-0.5 rounded-[2px] border border-[var(--fm-line)] bg-[var(--fm-surface)]">
+            {invitations.length} pending
           </span>
-        </CardHeader>
-        <CardContent className="p-0">
+        </div>
+
+        <div>
           {invitationsQuery.isLoading ? (
-            <div className="flex items-center justify-center p-8 text-sm text-muted-foreground gap-2">
-              <Loader2 className="h-4 w-4 animate-spin text-indigo-400" />
-              <span>Loading invitations…</span>
+            <div className="p-5 space-y-2">
+              {[1, 2].map((i) => (
+                <div key={i} className="h-10 rounded-[4px] bg-[var(--fm-surface)] animate-pulse" />
+              ))}
             </div>
           ) : invitations.length === 0 ? (
-            <div className="p-8 text-center text-sm text-muted-foreground">
+            <div className="p-8 text-center text-xs text-[var(--fm-text-muted)]">
               No pending invitations for this organization.
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow className="border-border/40 hover:bg-transparent">
-                  <TableHead className="text-xs font-semibold text-muted-foreground pl-6">Recipient Email</TableHead>
-                  <TableHead className="text-xs font-semibold text-muted-foreground">Assigned Role</TableHead>
-                  <TableHead className="text-xs font-semibold text-muted-foreground">Sent Date</TableHead>
-                  <TableHead className="text-xs font-semibold text-muted-foreground">Expires</TableHead>
-                  <TableHead className="text-xs font-semibold text-muted-foreground text-right pr-6">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {invitations.map((inv) => (
-                  <TableRow key={inv.id} className="border-border/30 hover:bg-muted/30">
-                    <TableCell className="pl-6 py-3 text-sm font-medium text-foreground">
-                      <div className="flex items-center gap-2">
-                        <Mail className="h-3.5 w-3.5 text-muted-foreground/60" />
-                        <span>{inv.email}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="py-3">
-                      <RoleBadge role={inv.role} />
-                    </TableCell>
-                    <TableCell className="py-3 text-xs text-muted-foreground">
-                      {inv.created_at
-                        ? new Date(inv.created_at).toLocaleDateString(undefined, {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric',
-                          })
-                        : '—'}
-                    </TableCell>
-                    <TableCell className="py-3 text-xs text-muted-foreground">
-                      {inv.expires_at
-                        ? new Date(inv.expires_at).toLocaleDateString(undefined, {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric',
-                          })
-                        : '—'}
-                    </TableCell>
-                    <TableCell className="py-3 text-right pr-6">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          const url = `${typeof window !== 'undefined' ? window.location.origin : ''}/invitations/${inv.token}`
-                          navigator.clipboard.writeText(url)
-                          setCopiedId(inv.id)
-                          setTimeout(() => setCopiedId(null), 2000)
-                        }}
-                        className="h-7 px-2.5 text-xs text-muted-foreground hover:text-foreground gap-1.5 cursor-pointer"
-                      >
-                        {copiedId === inv.id ? (
-                          <>
-                            <Check className="h-3.5 w-3.5 text-emerald-400" />
-                            <span className="text-emerald-400 font-medium">Copied</span>
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="h-3.5 w-3.5" />
-                            <span>Copy Link</span>
-                          </>
-                        )}
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <div className="overflow-x-auto">
+              <table className="fm-table">
+                <thead>
+                  <tr>
+                    <th>Recipient</th>
+                    <th>Role</th>
+                    <th>Sent</th>
+                    <th>Expires</th>
+                    <th className="text-right pr-5">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {invitations.map((inv) => (
+                    <tr key={inv.id}>
+                      <td className="font-mono text-xs text-[var(--fm-text)]">
+                        {inv.email}
+                      </td>
+                      <td>
+                        <RoleBadge role={inv.role} />
+                      </td>
+                      <td className="font-mono text-xs text-[var(--fm-text-muted)]">
+                        {inv.created_at
+                          ? new Date(inv.created_at).toLocaleDateString(undefined, {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric',
+                            })
+                          : '-'}
+                      </td>
+                      <td className="font-mono text-xs text-[var(--fm-text-muted)]">
+                        {inv.expires_at
+                          ? new Date(inv.expires_at).toLocaleDateString(undefined, {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric',
+                            })
+                          : '-'}
+                      </td>
+                      <td className="text-right pr-5">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            const url = `${typeof window !== 'undefined' ? window.location.origin : ''}/invite/accept?token=${inv.token}`
+                            navigator.clipboard.writeText(url)
+                            setCopiedId(inv.id)
+                            setTimeout(() => setCopiedId(null), 2000)
+                          }}
+                          className="h-7 px-2.5 text-xs text-[var(--fm-text-muted)] hover:text-[var(--fm-text)] border border-[var(--fm-line)]"
+                        >
+                          {copiedId === inv.id ? (
+                            <>
+                              <Check className="h-3 w-3 text-[var(--fm-status-good)] mr-1" />
+                              <span className="text-[var(--fm-status-good)]">Copied</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="h-3 w-3 mr-1" />
+                              <span>Copy Link</span>
+                            </>
+                          )}
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }

@@ -3,9 +3,8 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Menu, X, BarChart3, ChevronRight, LogOut, Settings, UserCircle } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import RealtimeBadge from '@/components/layout/RealtimeBadge'
 import { useAuthStore } from '@/store/authStore'
 import {
   DropdownMenu,
@@ -14,6 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { useRouter } from 'next/navigation'
 
 interface NavbarProps {
   variant?: 'landing' | 'dashboard'
@@ -22,14 +22,15 @@ interface NavbarProps {
 
 const links = [
   { label: 'Features', href: '#features' },
-  { label: 'How it Works', href: '#how-it-works' },
-  { label: 'Pricing', href: '#pricing' },
+  { label: 'How it works', href: '#how-it-works' },
+  { label: 'Log in', href: '/login' },
 ]
 
 export default function Navbar({ variant = 'landing', onMenuClick }: NavbarProps) {
   const [open, setOpen] = useState(false)
   const path = usePathname()
   const { user, logout } = useAuthStore()
+  const router = useRouter()
 
   const toggle = () => setOpen((p) => !p)
 
@@ -37,92 +38,134 @@ export default function Navbar({ variant = 'landing', onMenuClick }: NavbarProps
     return (
       <header
         id="dashboard-navbar"
-        className="sticky top-0 z-40 flex h-14 w-full items-center justify-between border-b border-border/50 bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 lg:px-6"
+        className="sticky top-0 z-40 flex h-14 w-full items-center justify-between px-4 lg:px-6"
+        style={{
+          borderBottom: '1px solid var(--fm-line)',
+          background: 'var(--fm-bg)',
+        }}
       >
         <div className="flex items-center gap-4">
+          {/* Mobile hamburger */}
           <button
             id="sidebar-mobile-toggle"
             aria-label="Toggle sidebar"
             onClick={onMenuClick}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground lg:hidden"
+            className="inline-flex h-8 w-8 items-center justify-center lg:hidden fm-btn-quiet"
+            style={{ borderRadius: 4, padding: 0 }}
           >
             <Menu className="h-5 w-5" />
           </button>
 
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-indigo-600">
-              <BarChart3 className="h-4 w-4 text-white" />
-            </div>
-            <span className="hidden text-sm font-semibold tracking-tight text-foreground sm:block">
-              FlowMetrics
-            </span>
-          </Link>
+          <span
+            style={{
+              fontFamily: 'var(--font-ibm-plex-mono)',
+              fontSize: 13,
+              color: 'var(--fm-text-muted)',
+            }}
+          >
+            {path.startsWith('/settings/github')
+              ? 'Settings / GitHub'
+              : path.startsWith('/settings')
+              ? 'Settings'
+              : path.startsWith('/repos')
+              ? (path.includes('/contributors')
+                  ? 'Contributors'
+                  : path.includes('/deployments')
+                  ? 'Deployments'
+                  : path.includes('/prs')
+                  ? 'Pull requests'
+                  : 'Repositories')
+              : path.startsWith('/invite')
+              ? 'Invite'
+              : 'Dashboard'}
+          </span>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="hidden sm:block">
-            <RealtimeBadge />
-          </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger className="flex h-8 w-8 items-center justify-center rounded-full border border-indigo-500/30 bg-indigo-600/20 focus:outline-none transition-colors hover:bg-indigo-600/30">
-              <span className="text-xs font-semibold text-indigo-400">
-                {user?.name?.[0]?.toUpperCase() ?? 'U'}
-              </span>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 bg-background/95 backdrop-blur border-border/50 mt-2">
-              <div className="px-2 py-1.5 text-sm font-normal">
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{user?.name ?? 'User'}</p>
-                  <p className="text-xs leading-none text-muted-foreground">{user?.email ?? ''}</p>
-                </div>
-              </div>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="cursor-pointer">
-                <UserCircle className="mr-2 h-4 w-4" />
-                <span>Profile</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer">
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Settings</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={logout} className="text-red-400 focus:text-red-400 focus:bg-red-400/10 cursor-pointer">
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Log out</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+        {/* User avatar */}
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            className="flex h-8 w-8 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 fm-btn-quiet"
+            style={{
+              background: 'var(--fm-surface-raised)',
+              border: '1px solid var(--fm-line)',
+              borderRadius: 4,
+              fontFamily: 'var(--font-ibm-plex-mono)',
+              fontSize: 12,
+              fontWeight: 600,
+              padding: 0,
+            }}
+          >
+            <span>{user?.name?.[0]?.toUpperCase() ?? 'U'}</span>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="end"
+            className="w-52 mt-2 p-1"
+            style={{
+              background: 'var(--fm-surface-raised)',
+              border: '1px solid var(--fm-line)',
+              borderRadius: 4,
+            }}
+          >
+            <div className="px-3 py-2">
+              <p className="text-sm font-medium" style={{ color: 'var(--fm-text)', fontFamily: 'var(--font-ibm-plex-mono)' }}>
+                {user?.name ?? 'User'}
+              </p>
+              <p className="text-xs" style={{ color: 'var(--fm-text-muted)' }}>
+                {user?.email ?? ''}
+              </p>
+            </div>
+            <DropdownMenuSeparator style={{ background: 'var(--fm-line)' }} />
+            <DropdownMenuItem
+              onClick={() => router.push('/settings')}
+              className="cursor-pointer text-sm fm-sidebar-link px-3 py-1.5"
+            >
+              <span>Settings</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator style={{ background: 'var(--fm-line)' }} />
+            <DropdownMenuItem
+              onClick={logout}
+              className="cursor-pointer text-sm fm-btn-destructive px-3 py-1.5"
+            >
+              <span>Log out</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </header>
     )
   }
 
+  // Landing page navbar (unchanged in scope for this task, but tokens updated)
   return (
     <header
       id="landing-navbar"
-      className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl"
+      className="sticky top-0 z-50 w-full"
+      style={{ borderBottom: '1px solid var(--fm-line)', background: 'var(--fm-surface)' }}
     >
       <nav className="flex h-16 w-full items-center justify-between px-6 lg:px-12 xl:px-24">
-        <Link href="/" className="group flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/25 transition-shadow group-hover:shadow-indigo-500/40">
-            <BarChart3 className="h-4 w-4 text-white" />
-          </div>
-          <span className="text-base font-bold tracking-tight text-foreground">
-            Flow<span className="text-indigo-400">Metrics</span>
-          </span>
+        <Link
+          href="/"
+          style={{
+            fontFamily: 'var(--font-ibm-plex-mono)',
+            fontWeight: 600,
+            fontSize: 15,
+            color: 'var(--fm-text)',
+            letterSpacing: '-0.01em',
+          }}
+        >
+          flowmetrics
         </Link>
 
-        <div className="hidden items-center gap-2 md:flex lg:gap-6">
+        <div className="hidden items-center gap-6 md:flex">
           {links.map((link) => (
             <a
               key={link.href}
               href={link.href}
-              className={cn(
-                'rounded-md px-4 py-2 text-sm font-medium transition-colors',
-                path === link.href
-                  ? 'text-foreground'
-                  : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
-              )}
+              className={cn('text-sm transition-colors', path === link.href ? '' : '')}
+              style={{
+                fontFamily: 'var(--font-ibm-plex-mono)',
+                fontSize: 13,
+                color: path === link.href ? 'var(--fm-text)' : 'var(--fm-text-muted)',
+              }}
             >
               {link.label}
             </a>
@@ -132,16 +175,19 @@ export default function Navbar({ variant = 'landing', onMenuClick }: NavbarProps
         <div className="hidden items-center gap-3 md:flex">
           <Link
             href="/login"
-            className="rounded-md px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            style={{
+              fontFamily: 'var(--font-ibm-plex-mono)',
+              fontSize: 13,
+              color: 'var(--fm-text-muted)',
+            }}
           >
-            Login
+            Log in
           </Link>
           <Link
-            href="/register"
-            className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-indigo-500/25 transition-all hover:bg-indigo-500 hover:shadow-indigo-500/40"
+            href="/login"
+            className="btn-accent"
           >
-            Get Started
-            <ChevronRight className="h-3.5 w-3.5" />
+            Continue with GitHub
           </Link>
         </div>
 
@@ -150,7 +196,8 @@ export default function Navbar({ variant = 'landing', onMenuClick }: NavbarProps
           aria-label="Toggle navigation"
           aria-expanded={open}
           onClick={toggle}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground md:hidden"
+          className="inline-flex h-9 w-9 items-center justify-center transition-colors md:hidden"
+          style={{ color: 'var(--fm-text-muted)', borderRadius: 4 }}
         >
           {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
@@ -159,7 +206,8 @@ export default function Navbar({ variant = 'landing', onMenuClick }: NavbarProps
       {open && (
         <div
           id="mobile-nav-menu"
-          className="absolute inset-x-0 top-full border-b border-border/40 bg-background/95 backdrop-blur-xl md:hidden"
+          className="absolute inset-x-0 top-full md:hidden"
+          style={{ borderBottom: '1px solid var(--fm-line)', background: 'var(--fm-surface)' }}
         >
           <div className="flex flex-col gap-1 px-6 py-4">
             {links.map((link) => (
@@ -167,25 +215,19 @@ export default function Navbar({ variant = 'landing', onMenuClick }: NavbarProps
                 key={link.href}
                 href={link.href}
                 onClick={() => setOpen(false)}
-                className="rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+                className="py-2.5 text-sm"
+                style={{ fontFamily: 'var(--font-ibm-plex-mono)', color: 'var(--fm-text-muted)', fontSize: 13 }}
               >
                 {link.label}
               </a>
             ))}
-            <div className="my-2 border-t border-border/40" />
+            <div className="my-2" style={{ borderTop: '1px solid var(--fm-line)' }} />
             <Link
               href="/login"
               onClick={() => setOpen(false)}
-              className="rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+              className="btn-accent self-start"
             >
-              Login
-            </Link>
-            <Link
-              href="/register"
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-indigo-500"
-            >
-              Get Started <ChevronRight className="h-3.5 w-3.5" />
+              Continue with GitHub
             </Link>
           </div>
         </div>

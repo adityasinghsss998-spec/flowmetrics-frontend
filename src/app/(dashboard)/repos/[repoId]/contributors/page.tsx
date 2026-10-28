@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
-import { Users, Clock, ArrowLeft } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import api from '@/lib/axios'
 import { ContributorData, HeatmapPoint, ContributorTrendPoint } from '@/types/api'
 import ContributorLeaderboard from '@/components/analytics/ContributorLeaderboard'
@@ -18,6 +18,8 @@ import {
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 
+import { useCurrentRepo } from '@/hooks/useCurrentRepo'
+
 export default function ContributorsPage() {
   const params = useParams()
   const router = useRouter()
@@ -25,6 +27,7 @@ export default function ContributorsPage() {
   const repoId = params.repoId as string
   const days = Number(searchParams.get('days') ?? 30)
   const [selectedAuthor, setSelectedAuthor] = useState<string | null>(null)
+  const { repoFullName } = useCurrentRepo(repoId)
 
   const contributorsQuery = useQuery<ContributorData>({
     queryKey: ['contributors', repoId, days],
@@ -58,42 +61,36 @@ export default function ContributorsPage() {
   const contrib = contributorsQuery.data
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
+    <div style={{ maxWidth: 1120, padding: '32px 24px' }} className="space-y-8">
+      {/* Top Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pb-6 border-b border-[var(--fm-line)]">
+        <div className="flex items-center gap-4">
           <Button
             id="back-to-repo"
             variant="ghost"
             size="sm"
             onClick={() => router.push(`/repos/${repoId}`)}
-            className="text-muted-foreground hover:text-foreground -ml-2 hover:bg-white/5"
+            className="border border-[var(--fm-line)]"
           >
-            <ArrowLeft className="h-4 w-4 mr-1" />
+            <ArrowLeft className="h-4 w-4 mr-1.5" />
             Overview
           </Button>
-          <div className="h-4 w-px bg-white/10" />
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-violet-500/15 border border-violet-500/20">
-              <Users className="h-4 w-4 text-violet-400" />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold tracking-tight text-foreground leading-none">
-                Contributors
-              </h1>
-              <p className="text-[11px] text-muted-foreground/60 mt-0.5">
-                Repository #{repoId}
-              </p>
-            </div>
+          <div>
+            <h1 className="font-mono text-2xl font-bold tracking-tight text-[var(--fm-text)]">
+              Contributors
+            </h1>
+            <p className="font-mono text-xs text-[var(--fm-text-muted)] mt-1">
+              {repoFullName || `Repository #${repoId}`} · {days}-day review and commit metrics
+            </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-1.5 backdrop-blur">
-          <Clock className="h-3.5 w-3.5 text-muted-foreground/60 shrink-0" />
+        <div className="flex items-center gap-2">
           <Select value={String(days)} onValueChange={(v) => router.push(`?days=${v}`)}>
-            <SelectTrigger id="time-range-selector" className="h-7 w-32 border-0 bg-transparent p-0 text-xs font-medium focus-visible:ring-0 shadow-none">
+            <SelectTrigger id="time-range-selector" className="h-8 border-[var(--fm-line)] bg-[var(--fm-surface)] px-3 font-mono text-xs">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="border-[var(--fm-line)] bg-[var(--fm-surface)] font-mono text-xs">
               <SelectItem value="7">Last 7 days</SelectItem>
               <SelectItem value="30">Last 30 days</SelectItem>
               <SelectItem value="60">Last 60 days</SelectItem>
@@ -103,7 +100,7 @@ export default function ContributorsPage() {
         </div>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2">
         <ContributorLeaderboard
           authors={contrib?.authors ?? []}
           reviewers={contrib?.reviewers ?? []}
@@ -117,16 +114,16 @@ export default function ContributorsPage() {
       </div>
 
       {selectedAuthor && (
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">
-              Drill-down · @{selectedAuthor}
+        <div className="space-y-3 pt-2">
+          <div className="flex items-center justify-between">
+            <span className="font-mono text-xs text-[var(--fm-text)] font-medium">
+              Author drill-down: @{selectedAuthor}
             </span>
             <button
               onClick={() => setSelectedAuthor(null)}
-              className="text-[10px] text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+              className="font-mono text-xs text-[var(--fm-text-muted)] hover:text-[var(--fm-accent)] transition-colors cursor-pointer"
             >
-              (clear)
+              [clear]
             </button>
           </div>
           <ContributorTrend

@@ -5,27 +5,22 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import {
   Building2,
-  GitBranch,
   Plus,
-  Lock,
-  Globe,
-  RefreshCw,
-  ExternalLink,
-  Sparkles,
-  ChevronRight,
-  X,
   ChevronDown,
   Check,
+  X,
   Trash2,
+  MoreHorizontal,
+  AlertTriangle,
 } from 'lucide-react'
 import api from '@/lib/axios'
-import { Organization, Repository } from '@/types/api'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { Organization, Repository, RecentDeployment } from '@/types/api'
 import { cn } from '@/lib/utils'
 import { useGithubConnect } from '@/hooks/useGithubConnect'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { useOrgRole } from '@/hooks/useOrgRole'
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface AvailableRepo {
   github_repo_id: number
@@ -39,6 +34,25 @@ interface AvailableRepo {
 interface OrgWithMembers extends Organization {
   members?: { id: number; name: string; OrgMember: { role: string } }[]
 }
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function relativeTime(dateStr: string | null | undefined): string {
+  if (!dateStr) return 'No deployments yet'
+  const diff = Date.now() - new Date(dateStr).getTime()
+  if (isNaN(diff) || diff < 0) return 'just now'
+  const minutes = Math.floor(diff / 60000)
+  if (minutes < 2) return 'just now'
+  if (minutes < 60) return `${minutes} minutes ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`
+  const days = Math.floor(hours / 24)
+  if (days < 365) return `${days} day${days === 1 ? '' : 's'} ago`
+  const years = Math.floor(days / 365)
+  return `${years} year${years === 1 ? '' : 's'} ago`
+}
+
+// ─── OrgSelect ────────────────────────────────────────────────────────────────
 
 function OrgSelect({
   orgs,
@@ -71,29 +85,43 @@ function OrgSelect({
         id="org-selector"
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex h-8 items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 text-sm font-semibold text-foreground hover:bg-white/[0.06] transition-colors"
+        className="fm-btn-quiet flex h-8 items-center gap-2 px-3 text-sm"
+        style={{
+          borderRadius: 4,
+          fontFamily: 'var(--font-ibm-plex-mono)',
+          fontSize: 13,
+          cursor: 'pointer',
+        }}
       >
         <span className="max-w-40 truncate">
           {selected ? selected.name : 'Select organization'}
         </span>
-        <ChevronDown className={cn('h-3.5 w-3.5 text-muted-foreground/60 transition-transform', open && 'rotate-180')} />
+        <ChevronDown
+          className={cn('h-3.5 w-3.5 transition-transform', open && 'rotate-180')}
+          style={{ color: 'var(--fm-text-muted)' }}
+        />
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full mt-1 z-50 min-w-56 rounded-xl border border-white/[0.08] bg-card shadow-2xl overflow-hidden">
+        <div
+          className="absolute left-0 top-full mt-1 z-50 min-w-56 overflow-hidden"
+          style={{
+            background: 'var(--fm-surface-raised)',
+            border: '1px solid var(--fm-line)',
+            borderRadius: 4,
+          }}
+        >
           {orgs.length === 0 ? (
-            <div className="p-3 text-center text-sm text-muted-foreground space-y-2">
+            <div className="p-3 text-center text-sm space-y-2" style={{ color: 'var(--fm-text-muted)' }}>
               <p>No organizations found.</p>
               <button
                 type="button"
-                onClick={() => {
-                  setOpen(false)
-                  onCreateOrg()
-                }}
-                className="w-full flex items-center justify-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-500 transition-colors"
+                onClick={() => { setOpen(false); onCreateOrg() }}
+                className="fm-btn-accent w-full"
+                style={{ fontSize: 12 }}
               >
                 <Plus className="h-3.5 w-3.5" />
-                Create Organization
+                <span>Create organization</span>
               </button>
             </div>
           ) : (
@@ -102,27 +130,37 @@ function OrgSelect({
                 <button
                   key={org.id}
                   type="button"
-                  onClick={() => {
-                    onChange(String(org.id))
-                    setOpen(false)
+                  onClick={() => { onChange(String(org.id)); setOpen(false) }}
+                  className="fm-sidebar-link flex w-full items-center gap-2 px-3 py-2 text-sm"
+                  style={{
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontFamily: 'var(--font-ibm-plex-sans)',
+                    fontSize: 13,
                   }}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-white/[0.05] transition-colors"
                 >
                   <span className="flex-1 text-left truncate">{org.name}</span>
-                  {String(org.id) === value && <Check className="h-3.5 w-3.5 text-indigo-400 shrink-0" />}
+                  {String(org.id) === value && (
+                    <Check className="h-3.5 w-3.5 shrink-0" style={{ color: 'var(--fm-accent)' }} />
+                  )}
                 </button>
               ))}
-              <div className="border-t border-white/[0.06] mt-1 pt-1 px-1">
+              <div className="mt-1 pt-1 px-1" style={{ borderTop: '1px solid var(--fm-line)' }}>
                 <button
                   type="button"
-                  onClick={() => {
-                    setOpen(false)
-                    onCreateOrg()
+                  onClick={() => { setOpen(false); onCreateOrg() }}
+                  className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-xs transition-colors"
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'var(--fm-accent)',
+                    cursor: 'pointer',
+                    fontFamily: 'var(--font-ibm-plex-mono)',
+                    borderRadius: 4,
                   }}
-                  className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium text-indigo-400 hover:bg-indigo-500/10 transition-colors"
                 >
                   <Plus className="h-3.5 w-3.5" />
-                  Create Organization
+                  Create organization
                 </button>
               </div>
             </div>
@@ -132,6 +170,8 @@ function OrgSelect({
     </div>
   )
 }
+
+// ─── CreateOrgModal ────────────────────────────────────────────────────────────
 
 function CreateOrgModal({
   open,
@@ -149,17 +189,13 @@ function CreateOrgModal({
   const mutation = useMutation({
     mutationFn: (payload: { name: string; github_org_name: string }) =>
       api.post('/orgs', payload).catch((err) => {
-        if (err.response?.status === 404) {
-          return api.post('/organizations', payload)
-        }
+        if (err.response?.status === 404) return api.post('/organizations', payload)
         throw err
       }),
     onSuccess: (res) => {
       qc.invalidateQueries({ queryKey: ['orgs'] })
       const newOrg = res.data?.data
-      if (newOrg?.id) {
-        onCreated(String(newOrg.id))
-      }
+      if (newOrg?.id) onCreated(String(newOrg.id))
       setName('')
       setGithubOrg('')
       onClose()
@@ -179,18 +215,31 @@ function CreateOrgModal({
 
   return (
     <Dialog open={open} onOpenChange={(val) => { if (!val) onClose() }}>
-      <DialogContent className="max-w-md border-white/[0.08] bg-card shadow-2xl p-6" showCloseButton={false}>
-        <div className="flex items-center justify-between border-b border-white/[0.06] pb-4 mb-4">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-indigo-500/20 bg-indigo-500/10">
-              <Building2 className="h-3.5 w-3.5 text-indigo-400" />
-            </div>
-            <span className="text-sm font-semibold text-foreground">Create Organization</span>
-          </div>
+      <DialogContent
+        className="max-w-md p-6"
+        showCloseButton={false}
+        style={{
+          background: 'var(--fm-surface-raised)',
+          border: '1px solid var(--fm-line)',
+          borderRadius: 4,
+        }}
+      >
+        <div className="flex items-center justify-between pb-4 mb-4" style={{ borderBottom: '1px solid var(--fm-line)' }}>
+          <span
+            style={{
+              fontFamily: 'var(--font-ibm-plex-mono)',
+              fontSize: 14,
+              fontWeight: 600,
+              color: 'var(--fm-text)',
+            }}
+          >
+            Create organization
+          </span>
           <button
             type="button"
             onClick={onClose}
-            className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-white/[0.05] hover:text-foreground transition-colors"
+            className="fm-btn-quiet flex h-7 w-7 items-center justify-center p-0"
+            style={{ borderRadius: 4 }}
           >
             <X className="h-4 w-4" />
           </button>
@@ -198,48 +247,56 @@ function CreateOrgModal({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1">
-              Organization Name *
+            <label
+              className="block mb-1"
+              style={{ fontFamily: 'var(--font-ibm-plex-mono)', fontSize: 11, color: 'var(--fm-text-muted)' }}
+            >
+              Organization name *
             </label>
             <input
               type="text"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Acme Corp"
-              className="w-full h-9 rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 text-sm text-foreground focus:outline-none focus:border-indigo-500"
+              placeholder="Acme Corp"
+              className="input-underline"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1">
-              GitHub Org Name (Optional)
+            <label
+              className="block mb-1"
+              style={{ fontFamily: 'var(--font-ibm-plex-mono)', fontSize: 11, color: 'var(--fm-text-muted)' }}
+            >
+              GitHub org name (optional)
             </label>
             <input
               type="text"
               value={githubOrg}
               onChange={(e) => setGithubOrg(e.target.value)}
-              placeholder="e.g. acme-inc"
-              className="w-full h-9 rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 text-sm text-foreground focus:outline-none focus:border-indigo-500"
+              placeholder="acme-inc"
+              className="input-underline"
             />
           </div>
 
-          {errorMsg && <p className="text-xs text-red-400">{errorMsg}</p>}
+          {errorMsg && (
+            <p style={{ fontSize: 12, color: 'var(--fm-status-poor)' }}>{errorMsg}</p>
+          )}
 
           <div className="flex justify-end gap-2 pt-2">
             <button
               type="button"
               onClick={onClose}
-              className="h-9 px-4 rounded-lg border border-white/[0.08] text-xs font-semibold text-muted-foreground hover:bg-white/[0.05] transition-colors"
+              className="fm-btn-quiet"
             >
-              Cancel
+              <span>Cancel</span>
             </button>
             <button
               type="submit"
               disabled={mutation.isPending || !name.trim()}
-              className="h-9 px-4 rounded-lg bg-indigo-600 text-xs font-semibold text-white hover:bg-indigo-500 disabled:opacity-50 transition-colors"
+              className="fm-btn-accent"
             >
-              {mutation.isPending ? 'Creating…' : 'Create Organization'}
+              <span>{mutation.isPending ? 'Creating...' : 'Create organization'}</span>
             </button>
           </div>
         </form>
@@ -247,6 +304,8 @@ function CreateOrgModal({
     </Dialog>
   )
 }
+
+// ─── ConnectModal ─────────────────────────────────────────────────────────────
 
 function ConnectModal({
   open,
@@ -285,116 +344,153 @@ function ConnectModal({
 
   return (
     <Dialog open={open} onOpenChange={(val) => { if (!val) onClose() }}>
-      <DialogContent className="sm:max-w-3xl w-[95vw] border-white/[0.08] bg-card p-0 shadow-2xl overflow-hidden" showCloseButton={false}>
-        <div className="flex items-center justify-between border-b border-white/[0.06] px-5 py-4">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-indigo-500/20 bg-indigo-500/10">
-              <GitBranch className="h-3.5 w-3.5 text-indigo-400" />
-            </div>
-            <span className="text-sm font-semibold text-foreground">Connect a Repository</span>
-          </div>
+      <DialogContent
+        className="flex flex-col w-full max-w-[calc(100vw-2rem)] sm:max-w-2xl p-0 overflow-hidden"
+        showCloseButton={false}
+        style={{
+          background: 'var(--fm-surface-raised)',
+          border: '1px solid var(--fm-line)',
+          borderRadius: 4,
+        }}
+      >
+        <div
+          className="flex items-center justify-between px-5 py-4 shrink-0"
+          style={{ borderBottom: '1px solid var(--fm-line)' }}
+        >
+          <span
+            style={{
+              fontFamily: 'var(--font-ibm-plex-mono)',
+              fontSize: 14,
+              fontWeight: 600,
+              color: 'var(--fm-text)',
+            }}
+          >
+            Connect a repository
+          </span>
           <button
             type="button"
             onClick={onClose}
-            className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-white/[0.05] hover:text-foreground transition-colors"
+            style={{ background: 'none', border: 'none', color: 'var(--fm-text-muted)', cursor: 'pointer', borderRadius: 4 }}
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        <div className="p-5 space-y-4">
+        <div className="p-5 space-y-4 w-full min-w-0">
           {showGithubConnect ? (
-            <div className="flex flex-col items-center justify-center rounded-xl border border-indigo-500/20 bg-indigo-500/10 p-6 text-center space-y-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-indigo-500/20 bg-indigo-500/20 text-indigo-400">
-                <GitBranch className="h-5 w-5" />
-              </div>
-              <h3 className="text-sm font-semibold text-foreground">GitHub Authorization Required</h3>
-              <p className="text-xs text-muted-foreground max-w-sm">
-                To connect repositories, you must first link your GitHub account to FlowMetrics.
+            <div
+              className="p-6 text-center space-y-3"
+              style={{ background: 'var(--fm-surface)', borderRadius: 4, border: '1px solid var(--fm-line)' }}
+            >
+              <p style={{ fontFamily: 'var(--font-ibm-plex-sans)', fontSize: 14, color: 'var(--fm-text)' }}>
+                GitHub authorization required
               </p>
-              <Button
+              <p style={{ fontSize: 13, color: 'var(--fm-text-muted)', fontFamily: 'var(--font-ibm-plex-sans)' }}>
+                To connect repositories, you must first link your GitHub account.
+              </p>
+              <button
                 type="button"
                 onClick={onConnectGithub}
-                className="bg-indigo-600 text-white hover:bg-indigo-500 text-xs font-semibold px-4 py-2 rounded-xl"
+                className="btn-accent mx-auto"
               >
-                Connect GitHub Account
-              </Button>
+                Connect GitHub account
+              </button>
             </div>
           ) : !activeOrgId ? (
-            <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-4 space-y-3">
-              <div className="flex items-center gap-2 text-amber-400 text-xs font-semibold">
-                <Building2 className="h-4 w-4" />
-                Select or Create an Organization First
-              </div>
-              <p className="text-xs text-muted-foreground">
-                You need an active organization to link repositories. Choose an existing organization or create a new one.
+            <div
+              className="p-4 space-y-3"
+              style={{ background: 'var(--fm-surface)', borderRadius: 4, border: '1px solid var(--fm-line)' }}
+            >
+              <p style={{ fontSize: 13, color: 'var(--fm-text)', fontFamily: 'var(--font-ibm-plex-sans)', fontWeight: 500 }}>
+                Select or create an organization first
+              </p>
+              <p style={{ fontSize: 12, color: 'var(--fm-text-muted)', fontFamily: 'var(--font-ibm-plex-sans)' }}>
+                You need an active organization to link repositories.
               </p>
               <div className="flex flex-wrap items-center gap-2 pt-1">
                 {orgs.length > 0 && (
-                  <OrgSelect
-                    orgs={orgs}
-                    value={activeOrgId}
-                    onChange={onSelectOrg}
-                    onCreateOrg={onCreateOrg}
-                  />
+                  <OrgSelect orgs={orgs} value={activeOrgId} onChange={onSelectOrg} onCreateOrg={onCreateOrg} />
                 )}
                 <button
                   type="button"
                   onClick={onCreateOrg}
-                  className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-500 transition-colors"
+                  className="btn-accent"
+                  style={{ fontSize: 12 }}
                 >
                   <Plus className="h-3.5 w-3.5" />
-                  Create Organization
+                  Create organization
                 </button>
               </div>
             </div>
           ) : (
-            <div className="flex flex-col gap-3 max-h-[60vh] overflow-y-auto overflow-x-hidden pr-2">
+            <div className="flex flex-col gap-2 max-h-[60vh] overflow-y-auto overflow-x-hidden pr-1 w-full min-w-0">
               {isLoadingRepos && (
                 <div className="space-y-2">
                   {[1, 2, 3].map((i) => (
-                    <div key={i} className="h-16 rounded-xl bg-white/[0.04] animate-pulse" />
+                    <div key={i} className="skeleton h-14" />
                   ))}
                 </div>
               )}
-
               {!isLoadingRepos && availableRepos.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-10 text-center">
-                  <GitBranch className="h-8 w-8 text-muted-foreground/20 mb-3" />
-                  <p className="text-sm text-muted-foreground">No repositories found.</p>
-                  <p className="text-xs text-muted-foreground/50 mt-1">Ensure your GitHub token is configured.</p>
+                  <p style={{ fontSize: 14, color: 'var(--fm-text-muted)', fontFamily: 'var(--font-ibm-plex-sans)' }}>
+                    No repositories found.
+                  </p>
+                  <p style={{ fontSize: 12, color: 'var(--fm-text-muted)', marginTop: 4, opacity: 0.7 }}>
+                    Ensure your GitHub token has repository access.
+                  </p>
                 </div>
               )}
-
               {availableRepos.map((repo) => (
-                <div 
-                  key={repo.github_repo_id} 
-                  className="grid grid-cols-[1fr_auto] items-center gap-4 p-3 border rounded-lg bg-card w-full"
+                <div
+                  key={repo.github_repo_id}
+                  className="flex items-center justify-between gap-3 p-3 w-full min-w-0"
+                  style={{
+                    background: 'var(--fm-surface)',
+                    border: '1px solid var(--fm-line)',
+                    borderRadius: 4,
+                  }}
                 >
-                  <div className="min-w-0">
-                    <div className="font-medium text-sm truncate">{repo.full_name}</div>
+                  <div className="flex-1 min-w-0 pr-1">
+                    <div
+                      className="font-medium text-sm truncate"
+                      style={{ fontFamily: 'var(--font-ibm-plex-mono)', color: 'var(--fm-text)' }}
+                      title={repo.full_name}
+                    >
+                      {repo.full_name}
+                    </div>
                     {repo.description && (
-                      <div className="text-xs text-muted-foreground truncate">{repo.description}</div>
+                      <div
+                        className="text-xs truncate block"
+                        style={{ color: 'var(--fm-text-muted)', marginTop: 2 }}
+                        title={repo.description}
+                      >
+                        {repo.description}
+                      </div>
                     )}
                   </div>
-                  <Button
+                  <button
                     id={`connect-${repo.github_repo_id}`}
                     disabled={isPending && connectingRepo === repo.full_name}
                     onClick={() => onConnect(repo.full_name)}
+                    className="fm-btn-accent shrink-0 whitespace-nowrap"
+                    style={{ fontSize: 12, padding: '6px 14px' }}
                   >
-                    {isPending && connectingRepo === repo.full_name ? 'Connecting…' : 'Connect'}
-                  </Button>
+                    <span>{isPending && connectingRepo === repo.full_name ? 'Connecting...' : 'Connect'}</span>
+                  </button>
                 </div>
               ))}
             </div>
           )}
 
-          {error && <p className="text-xs text-red-400">{error}</p>}
+          {error && <p style={{ fontSize: 12, color: 'var(--fm-status-poor)' }}>{error}</p>}
         </div>
       </DialogContent>
     </Dialog>
   )
 }
+
+// ─── DisconnectConfirmModal ────────────────────────────────────────────────────
 
 function DisconnectConfirmModal({
   open,
@@ -413,45 +509,60 @@ function DisconnectConfirmModal({
 }) {
   return (
     <Dialog open={open} onOpenChange={(val) => { if (!val) onClose() }}>
-      <DialogContent className="max-w-md border-white/[0.08] bg-card shadow-2xl p-6 space-y-4" showCloseButton={false}>
-        <div className="flex items-center justify-between border-b border-white/[0.06] pb-4">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg border border-red-500/20 bg-red-500/10">
-              <Trash2 className="h-3.5 w-3.5 text-red-400" />
-            </div>
-            <span className="text-sm font-semibold text-foreground">Disconnect Repository</span>
-          </div>
+      <DialogContent
+        className="max-w-md p-6 space-y-4"
+        showCloseButton={false}
+        style={{
+          background: 'var(--fm-surface-raised)',
+          border: '1px solid var(--fm-line)',
+          borderRadius: 4,
+        }}
+      >
+        <div className="flex items-center justify-between pb-4" style={{ borderBottom: '1px solid var(--fm-line)' }}>
+          <span
+            style={{
+              fontFamily: 'var(--font-ibm-plex-mono)',
+              fontSize: 14,
+              fontWeight: 600,
+              color: 'var(--fm-text)',
+            }}
+          >
+            Disconnect repository
+          </span>
           <button
             type="button"
             onClick={onClose}
-            className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-white/[0.05] hover:text-foreground transition-colors"
+            className="fm-btn-quiet flex h-7 w-7 items-center justify-center p-0"
+            style={{ borderRadius: 4 }}
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        <p className="text-xs text-muted-foreground">
-          Are you sure you want to disconnect <strong className="text-foreground font-semibold">{repoName}</strong>? Webhook tracking will stop and the repository will be unlinked.
+        <p style={{ fontSize: 13, color: 'var(--fm-text-muted)', fontFamily: 'var(--font-ibm-plex-sans)', lineHeight: 1.6 }}>
+          Disconnect{' '}
+          <strong style={{ color: 'var(--fm-text)', fontWeight: 600 }}>{repoName}</strong>?
+          Webhook tracking will stop and the repository will be unlinked. Analytics data is preserved.
         </p>
 
-        {error && <p className="text-xs text-red-400">{error}</p>}
+        {error && <p style={{ fontSize: 12, color: 'var(--fm-status-poor)' }}>{error}</p>}
 
         <div className="flex justify-end gap-2 pt-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="h-9 px-4 rounded-lg border border-white/[0.08] text-xs font-semibold text-muted-foreground hover:bg-white/[0.05] transition-colors"
-          >
-            Cancel
+          <button type="button" onClick={onClose} className="fm-btn-quiet">
+            <span>Cancel</span>
           </button>
           <button
             id="confirm-disconnect-btn"
             type="button"
             disabled={isPending}
             onClick={onConfirm}
-            className="h-9 px-4 rounded-lg bg-red-600 text-xs font-semibold text-white hover:bg-red-500 disabled:opacity-50 transition-colors"
+            className="fm-btn-destructive"
+            style={{
+              fontSize: 13,
+              fontWeight: 500,
+            }}
           >
-            {isPending ? 'Disconnecting…' : 'Disconnect Repository'}
+            <span>{isPending ? 'Disconnecting...' : 'Disconnect'}</span>
           </button>
         </div>
       </DialogContent>
@@ -459,156 +570,262 @@ function DisconnectConfirmModal({
   )
 }
 
-function RepoCard({
+// ─── Row menu ─────────────────────────────────────────────────────────────────
+
+function RepoRowMenu({ onDisconnect }: { onDisconnect: () => void }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  return (
+    <div ref={ref} className="relative" onClick={(e) => e.stopPropagation()}>
+      <button
+        type="button"
+        aria-label="Row actions"
+        onClick={(e) => { e.stopPropagation(); setOpen((v) => !v) }}
+        className="fm-btn-quiet flex h-7 w-7 items-center justify-center p-0"
+        style={{ borderRadius: 4 }}
+      >
+        <MoreHorizontal className="h-4 w-4" />
+      </button>
+      {open && (
+        <div
+          className="absolute right-0 top-full mt-1 z-50 min-w-40"
+          style={{
+            background: 'var(--fm-surface-raised)',
+            border: '1px solid var(--fm-line)',
+            borderRadius: 4,
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => { setOpen(false); onDisconnect() }}
+            className="fm-btn-destructive flex w-full items-center px-3 py-2 text-sm justify-start"
+            style={{ border: 'none' }}
+          >
+            <span>Disconnect</span>
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Repo row with its own deployment query ────────────────────────────────────
+
+function RepoRow({
   repo,
   onClick,
   onDisconnect,
+  canDelete,
 }: {
   repo: Repository
   onClick: () => void
   onDisconnect?: () => void
+  canDelete: boolean
 }) {
   const recentDeployQuery = useQuery({
     queryKey: ['recent-deployments', repo.id],
-    queryFn: () => api.get(`/analytics/deployments/recent?repoId=${repo.id}&limit=1`).then(r => r.data.data),
+    queryFn: async () => {
+      try {
+        const res = await api.get(`/analytics/deployments/recent?repoId=${repo.id}&limit=1`)
+        return (res.data?.data as RecentDeployment[]) ?? []
+      } catch {
+        return []
+      }
+    },
+    enabled: Boolean(repo?.id),
     staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
+    retry: 1,
   })
 
   const lastDeploy = recentDeployQuery.data?.[0]
-  
-  const getDeployStatusDisplay = () => {
+
+  const statusCell = () => {
     if (recentDeployQuery.isLoading) {
-      return (
-        <div className="flex items-center gap-1.5">
-          <div className="h-1.5 w-1.5 rounded-full bg-slate-600 animate-pulse" />
-          <span className="text-[11px] font-medium text-muted-foreground/40">Loading deployments...</span>
-        </div>
-      )
+      return <span style={{ color: 'var(--fm-text-muted)', fontSize: 12 }}>-</span>
     }
-    
     if (!lastDeploy) {
-      return (
-        <div className="flex items-center gap-1.5">
-          <div className="h-1.5 w-1.5 rounded-full bg-slate-600" />
-          <span className="text-[11px] font-medium text-muted-foreground/40">No deployments recorded</span>
-        </div>
-      )
+      return <span style={{ color: 'var(--fm-text-muted)', fontSize: 12 }}>-</span>
     }
-
-    const diff = Date.now() - new Date(lastDeploy.deployed_at).getTime()
-    const hours = Math.max(1, Math.floor(diff / (1000 * 60 * 60)))
-    const timeAgo = `${hours} hour${hours === 1 ? '' : 's'} ago`
-
-    if (lastDeploy.status === 'success') {
-      return (
-        <div className="flex items-center gap-1.5">
-          <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50" />
-          <span className="text-[11px] font-medium text-emerald-500/80">Last deploy: {timeAgo}</span>
-        </div>
-      )
-    }
-
+    const color =
+      lastDeploy.status === 'success'
+        ? 'var(--fm-status-good)'
+        : 'var(--fm-status-poor)'
     return (
-      <div className="flex items-center gap-1.5">
-        <div className="h-1.5 w-1.5 rounded-full bg-red-500 shadow-sm shadow-red-500/50" />
-        <span className="text-[11px] font-medium text-red-500/80">Last deploy failed: {timeAgo}</span>
-      </div>
+      <span
+        style={{
+          fontFamily: 'var(--font-ibm-plex-mono)',
+          fontSize: 12,
+          color,
+        }}
+      >
+        {lastDeploy.status === 'success' ? 'success' : 'failed'}
+      </span>
+    )
+  }
+
+  const lastDeployCell = () => {
+    if (recentDeployQuery.isLoading) {
+      return <div className="skeleton h-4 w-24" />
+    }
+    if (!lastDeploy || !lastDeploy.deployed_at) {
+      return (
+        <span
+          style={{
+            fontFamily: 'var(--font-ibm-plex-sans)',
+            fontSize: 13,
+            color: 'var(--fm-text-muted)',
+          }}
+        >
+          No deployments yet
+        </span>
+      )
+    }
+    return (
+      <span
+        style={{
+          fontFamily: 'var(--font-ibm-plex-sans)',
+          fontSize: 13,
+          color: 'var(--fm-text-muted)',
+        }}
+        title={new Date(lastDeploy.deployed_at).toLocaleString()}
+      >
+        {relativeTime(lastDeploy.deployed_at)}
+      </span>
     )
   }
 
   return (
-    <div
-      role="button"
-      tabIndex={0}
+    <tr
       onClick={onClick}
-      onKeyDown={(e) => e.key === 'Enter' && onClick()}
-      className={cn(
-        'group relative cursor-pointer overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5',
-        'backdrop-blur-xl transition-all duration-300',
-        'hover:border-indigo-500/30 hover:bg-white/[0.04] hover:-translate-y-0.5 hover:shadow-xl hover:shadow-indigo-500/10',
-      )}
+      style={{ cursor: 'pointer' }}
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/0 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-      <div className="absolute -top-8 -right-8 h-24 w-24 rounded-full bg-indigo-500/5 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+      <td style={{ padding: '12px 16px', borderBottom: '1px solid var(--fm-line)' }}>
+        <span
+          style={{
+            fontFamily: 'var(--font-ibm-plex-mono)',
+            fontSize: 13,
+            color: 'var(--fm-text)',
+            fontWeight: 500,
+          }}
+        >
+          {repo.name}
+        </span>
+        <span
+          style={{
+            fontFamily: 'var(--font-ibm-plex-sans)',
+            fontSize: 11,
+            color: 'var(--fm-text-muted)',
+            display: 'block',
+          }}
+        >
+          {repo.full_name}
+        </span>
+      </td>
+      <td style={{ padding: '12px 16px', borderBottom: '1px solid var(--fm-line)' }}>
+        <span
+          style={{
+            fontFamily: 'var(--font-ibm-plex-mono)',
+            fontSize: 12,
+            color: 'var(--fm-text-muted)',
+          }}
+        >
+          {repo.default_branch}
+        </span>
+      </td>
+      <td style={{ padding: '12px 16px', borderBottom: '1px solid var(--fm-line)' }}>
+        {lastDeployCell()}
+      </td>
+      <td style={{ padding: '12px 16px', borderBottom: '1px solid var(--fm-line)' }}>
+        {statusCell()}
+      </td>
+      <td
+        style={{ padding: '12px 8px 12px 0', borderBottom: '1px solid var(--fm-line)', textAlign: 'right', width: 40 }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {canDelete && onDisconnect && (
+          <RepoRowMenu onDisconnect={onDisconnect} />
+        )}
+      </td>
+    </tr>
+  )
+}
 
-      <div className="relative z-10">
-        <div className="flex items-start justify-between gap-2 mb-3">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className={cn(
-              'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border',
-              repo.is_private ? 'border-amber-500/20 bg-amber-500/10' : 'border-emerald-500/20 bg-emerald-500/10'
-            )}>
-              {repo.is_private
-                ? <Lock className="h-3.5 w-3.5 text-amber-400" />
-                : <Globe className="h-3.5 w-3.5 text-emerald-400" />
-              }
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-foreground truncate leading-tight">{repo.name}</p>
-              <p className="text-[11px] text-muted-foreground/60 truncate">{repo.full_name}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-1">
-            {onDisconnect && (
-              <button
-                id={`disconnect-repo-${repo.id}`}
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onDisconnect()
-                }}
-                title="Disconnect repository"
-                className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground/40 hover:bg-red-500/10 hover:text-red-400 transition-colors"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </button>
-            )}
-            <ExternalLink className="h-3.5 w-3.5 text-muted-foreground/30 shrink-0 opacity-0 group-hover:opacity-100 transition-all duration-200 group-hover:text-indigo-400" />
-          </div>
-        </div>
+// ─── Table skeleton ────────────────────────────────────────────────────────────
 
-        <div className="space-y-2.5 mt-4 pt-3 border-t border-white/[0.04]">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <GitBranch className="h-3 w-3 text-muted-foreground/40 shrink-0" />
-              <span className="text-[11px] text-muted-foreground/60 font-mono">{repo.default_branch}</span>
-            </div>
-            {getDeployStatusDisplay()}
-          </div>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
-              <div className={cn(
-                'h-1.5 w-1.5 rounded-full',
-                repo.webhook_id ? 'bg-emerald-500 shadow-sm shadow-emerald-500/50' : 'bg-slate-600'
-              )} />
-              <span className={cn('text-[11px] font-medium', repo.webhook_id ? 'text-emerald-500/80' : 'text-muted-foreground/40')}>
-                {repo.webhook_id ? 'Live' : 'No webhook'}
-              </span>
-            </div>
-            {repo.last_synced_at && (
-              <div className="flex items-center gap-1 text-[11px] text-muted-foreground/40">
-                <RefreshCw className="h-2.5 w-2.5" />
-                {new Date(repo.last_synced_at).toLocaleDateString()}
-              </div>
-            )}
-          </div>
+function TableSkeleton() {
+  return (
+    <div style={{ border: '1px solid var(--fm-line)', borderRadius: 4, overflow: 'hidden' }}>
+      <div style={{ background: 'var(--fm-surface)', padding: '10px 16px', borderBottom: '1px solid var(--fm-line)' }}>
+        <div className="flex gap-8">
+          {['Repository', 'Branch', 'Last deploy', 'Status'].map((h) => (
+            <span
+              key={h}
+              style={{
+                fontFamily: 'var(--font-ibm-plex-mono)',
+                fontSize: 12,
+                color: 'var(--fm-text-muted)',
+              }}
+            >
+              {h}
+            </span>
+          ))}
         </div>
       </div>
+      {[1, 2, 3, 4].map((i) => (
+        <div
+          key={i}
+          className="flex items-center gap-8 px-4 py-3"
+          style={{ borderBottom: '1px solid var(--fm-line)' }}
+        >
+          <div className="skeleton h-4 w-40" />
+          <div className="skeleton h-4 w-16" />
+          <div className="skeleton h-4 w-24" />
+          <div className="skeleton h-4 w-14" />
+        </div>
+      ))}
     </div>
   )
 }
+
+// ─── DashboardPage ────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
   const router = useRouter()
   const qc = useQueryClient()
   const { isGithubConnected, connectGithub } = useGithubConnect()
-  const { canConnectRepo, canDeleteRepo } = useOrgRole()
+  const {
+    canConnectRepo,
+    canDeleteRepo,
+    activeOrgId: ctxOrgId,
+    setActiveOrgId: setCtxOrgId,
+    isLoading: isRoleLoading,
+  } = useOrgRole()
   const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null)
   const [connectOpen, setConnectOpen] = useState(false)
   const [createOrgOpen, setCreateOrgOpen] = useState(false)
   const [connectingRepo, setConnectingRepo] = useState<string | null>(null)
   const [repoToDisconnect, setRepoToDisconnect] = useState<Repository | null>(null)
+
+  useEffect(() => {
+    if (ctxOrgId && !selectedOrgId) {
+      setSelectedOrgId(String(ctxOrgId))
+    }
+  }, [ctxOrgId, selectedOrgId])
+
+  const handleSelectOrg = (id: string) => {
+    setSelectedOrgId(id)
+    setCtxOrgId(id)
+  }
 
   const orgsQuery = useQuery<OrgWithMembers[]>({
     queryKey: ['orgs'],
@@ -633,12 +850,8 @@ export default function DashboardPage() {
     queryKey: ['repos', activeOrgId],
     queryFn: async () => {
       if (!activeOrgId) return []
-      try {
-        const res = await api.get(`/repos/org/${activeOrgId}`)
-        return res.data.data
-      } catch (err) {
-        throw err
-      }
+      const res = await api.get(`/repos/org/${activeOrgId}`)
+      return res.data.data
     },
     enabled: !!activeOrgId,
     staleTime: 1000 * 60 * 5,
@@ -648,12 +861,8 @@ export default function DashboardPage() {
   const availableReposQuery = useQuery<AvailableRepo[]>({
     queryKey: ['available-repos'],
     queryFn: async () => {
-      try {
-        const res = await api.get('/repos/available')
-        return res.data.data
-      } catch (err) {
-        throw err
-      }
+      const res = await api.get('/repos/available')
+      return res.data.data
     },
     enabled: connectOpen && !!activeOrgId && isGithubConnected,
     staleTime: 1000 * 60 * 5,
@@ -663,11 +872,7 @@ export default function DashboardPage() {
 
   const connectMutation = useMutation({
     mutationFn: async (payload: { orgId: number; fullName: string }) => {
-      try {
-        return await api.post('/repos/connect', payload)
-      } catch (err) {
-        throw err
-      }
+      return await api.post('/repos/connect', payload)
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['repos', activeOrgId] })
@@ -678,11 +883,7 @@ export default function DashboardPage() {
 
   const disconnectMutation = useMutation({
     mutationFn: async (repoId: number) => {
-      try {
-        return await api.delete(`/repos/${repoId}?orgId=${activeOrgId}`)
-      } catch (err) {
-        throw err
-      }
+      return await api.delete(`/repos/${repoId}?orgId=${activeOrgId}`)
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['repos', activeOrgId] })
@@ -710,37 +911,31 @@ export default function DashboardPage() {
         ?.response?.data?.message ?? 'Failed to disconnect repository.')
     : null
 
+  const isLoading = reposQuery.isLoading || isRoleLoading
+
   return (
-    <div className="space-y-8">
+    <div style={{ maxWidth: 1120, padding: '32px 24px' }}>
+      {/* Modals */}
       <CreateOrgModal
         open={createOrgOpen}
         onClose={() => setCreateOrgOpen(false)}
-        onCreated={(newId) => setSelectedOrgId(newId)}
+        onCreated={(newId) => handleSelectOrg(newId)}
       />
-
       <DisconnectConfirmModal
         open={!!repoToDisconnect}
         onClose={() => setRepoToDisconnect(null)}
         repoName={repoToDisconnect?.name ?? null}
         isPending={disconnectMutation.isPending}
-        onConfirm={() => {
-          if (repoToDisconnect) {
-            disconnectMutation.mutate(repoToDisconnect.id)
-          }
-        }}
+        onConfirm={() => { if (repoToDisconnect) disconnectMutation.mutate(repoToDisconnect.id) }}
         error={disconnectError}
       />
-
       <ConnectModal
         open={connectOpen}
         onClose={() => setConnectOpen(false)}
         activeOrgId={activeOrgId}
         orgs={orgs}
-        onSelectOrg={(v) => setSelectedOrgId(v)}
-        onCreateOrg={() => {
-          setConnectOpen(false)
-          setCreateOrgOpen(true)
-        }}
+        onSelectOrg={handleSelectOrg}
+        onCreateOrg={() => { setConnectOpen(false); setCreateOrgOpen(true) }}
         availableRepos={availableRepos}
         isLoadingRepos={availableReposQuery.isLoading}
         isPending={connectMutation.isPending}
@@ -752,137 +947,174 @@ export default function DashboardPage() {
         onConnectGithub={connectGithub}
       />
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      {/* Page header */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between" style={{ marginBottom: 32 }}>
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <Sparkles className="h-4 w-4 text-indigo-400" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">
-              Workspace
-            </span>
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Dashboard</h1>
-          <p className="text-sm text-muted-foreground/70 mt-1">
-            Monitor DORA metrics across your connected repositories.
+          <h1
+            style={{
+              fontFamily: 'var(--font-ibm-plex-mono)',
+              fontSize: 22,
+              fontWeight: 600,
+              color: 'var(--fm-text)',
+              margin: 0,
+              letterSpacing: '-0.02em',
+            }}
+          >
+            Dashboard
+          </h1>
+          <p style={{ fontSize: 13, color: 'var(--fm-text-muted)', marginTop: 6, fontFamily: 'var(--font-ibm-plex-sans)' }}>
+            DORA metrics across connected repositories.
           </p>
         </div>
 
-        {canConnectRepo && (
-          <Button
+        {!isLoading && canConnectRepo && (
+          <button
             id="connect-repo-btn"
             type="button"
             onClick={() => setConnectOpen(true)}
-            className={cn(
-              'flex items-center gap-2 rounded-xl px-4',
-              'bg-indigo-600 text-white hover:bg-indigo-500',
-              'shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/30',
-              'transition-all duration-200',
-            )}
+            className="fm-btn-accent flex items-center gap-2"
           >
             <Plus className="h-4 w-4" />
-            Connect Repository
-          </Button>
+            <span>Connect repository</span>
+          </button>
         )}
       </div>
 
-      <div className="flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-2.5 w-fit">
-        <Building2 className="h-4 w-4 text-muted-foreground/60 shrink-0" />
-        <span className="text-xs font-medium text-muted-foreground/60 shrink-0">Organization</span>
-        <div className="w-px h-4 bg-white/10" />
+      {/* Org selector */}
+      <div className="flex items-center gap-3" style={{ marginBottom: 24 }}>
+        <span style={{ fontFamily: 'var(--font-ibm-plex-mono)', fontSize: 12, color: 'var(--fm-text-muted)' }}>
+          Organization
+        </span>
         {orgsQuery.isLoading ? (
-          <div className="h-6 w-40 rounded-md bg-white/10 animate-pulse" />
+          <div className="skeleton h-8 w-40" />
         ) : (
           <OrgSelect
             orgs={orgs}
             value={activeOrgId}
-            onChange={setSelectedOrgId}
+            onChange={handleSelectOrg}
             onCreateOrg={() => setCreateOrgOpen(true)}
           />
         )}
-        {activeOrg && (
-          <Badge variant="outline" className="text-[10px] h-5 border-indigo-500/20 text-indigo-400 bg-indigo-500/5">
-            {activeOrg.slug}
-          </Badge>
-        )}
       </div>
 
-      {reposQuery.isLoading && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="h-44 rounded-2xl bg-white/[0.02] border border-white/[0.04] animate-pulse" />
-          ))}
+      {/* Table skeleton while loading */}
+      {isLoading && <TableSkeleton />}
+
+      {/* No orgs state */}
+      {!orgsQuery.isLoading && orgs.length === 0 && (
+        <div
+          className="flex flex-col items-center justify-center py-20 text-center"
+          style={{ border: '1px solid var(--fm-line)', borderRadius: 4 }}
+        >
+          <Building2 className="h-6 w-6" style={{ color: 'var(--fm-text-muted)', marginBottom: 16, opacity: 0.4 }} />
+          <p style={{ fontSize: 15, fontFamily: 'var(--font-ibm-plex-mono)', color: 'var(--fm-text)', marginBottom: 8 }}>
+            No organization found
+          </p>
+          <p style={{ fontSize: 13, color: 'var(--fm-text-muted)', fontFamily: 'var(--font-ibm-plex-sans)', marginBottom: 24 }}>
+            Create an organization to manage repositories and track metrics.
+          </p>
+          <button
+            type="button"
+            onClick={() => setCreateOrgOpen(true)}
+            className="fm-btn-accent flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Create organization</span>
+          </button>
         </div>
       )}
 
-      {!reposQuery.isLoading && repos.length === 0 && activeOrgId && (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/[0.08] bg-white/[0.01] py-20 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/[0.06] bg-white/[0.02] mb-4">
-            <GitBranch className="h-6 w-6 text-muted-foreground/30" />
-          </div>
+      {/* Empty repos state */}
+      {!isLoading && repos.length === 0 && activeOrgId && (
+        <div
+          className="flex flex-col items-center justify-center py-20 text-center"
+          style={{ border: '1px solid var(--fm-line)', borderRadius: 4 }}
+        >
+          <p style={{ fontSize: 15, fontFamily: 'var(--font-ibm-plex-mono)', color: 'var(--fm-text)', marginBottom: 8 }}>
+            No repositories connected
+          </p>
           {canConnectRepo ? (
             <>
-              <p className="text-base font-semibold text-muted-foreground">No repositories connected</p>
-              <p className="text-sm text-muted-foreground/50 mt-1 mb-5">
+              <p style={{ fontSize: 13, color: 'var(--fm-text-muted)', fontFamily: 'var(--font-ibm-plex-sans)', marginBottom: 24 }}>
                 Connect a GitHub repository to start tracking DORA metrics.
               </p>
-              <Button
+              <button
                 id="empty-connect-repo-btn"
                 type="button"
                 onClick={() => setConnectOpen(true)}
-                className="bg-indigo-600 text-white hover:bg-indigo-500 shadow-lg shadow-indigo-500/20 rounded-xl"
+                className="fm-btn-accent flex items-center gap-2"
               >
-                <Plus className="h-4 w-4 mr-2" />
-                Connect Repository
-                <ChevronRight className="h-4 w-4 ml-1" />
-              </Button>
+                <Plus className="h-4 w-4" />
+                <span>Connect repository</span>
+              </button>
             </>
           ) : (
-            <>
-              <p className="text-base font-semibold text-muted-foreground">No repositories connected yet</p>
-              <p className="text-sm text-muted-foreground/50 mt-1 max-w-sm">
-                Ask your org owner to connect a GitHub repository.
-              </p>
-            </>
+            <p style={{ fontSize: 13, color: 'var(--fm-text-muted)', fontFamily: 'var(--font-ibm-plex-sans)' }}>
+              Ask your org owner to connect a GitHub repository.
+            </p>
           )}
         </div>
       )}
 
-      {!orgsQuery.isLoading && orgs.length === 0 && (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/[0.08] bg-white/[0.01] py-20 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/[0.06] bg-white/[0.02] mb-4">
-            <Building2 className="h-6 w-6 text-muted-foreground/30" />
-          </div>
-          <p className="text-base font-semibold text-muted-foreground">No organization found</p>
-          <p className="text-sm text-muted-foreground/50 mt-1 mb-5">
-            Create an organization to manage your repositories and track metrics.
+      {/* Error state */}
+      {reposQuery.isError && (
+        <div
+          className="flex items-center gap-3 p-4"
+          style={{ border: '1px solid color-mix(in srgb, var(--fm-status-poor) 30%, transparent)', borderRadius: 4, background: 'color-mix(in srgb, var(--fm-status-poor) 8%, transparent)' }}
+        >
+          <AlertTriangle className="h-4 w-4 shrink-0" style={{ color: 'var(--fm-status-poor)' }} />
+          <p style={{ fontSize: 13, color: 'var(--fm-text-muted)', fontFamily: 'var(--font-ibm-plex-sans)' }}>
+            Failed to load repositories. Please refresh.
           </p>
-          <Button
-            type="button"
-            onClick={() => setCreateOrgOpen(true)}
-            className="bg-indigo-600 text-white hover:bg-indigo-500 shadow-lg shadow-indigo-500/20 rounded-xl"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Create Organization
-            <ChevronRight className="h-4 w-4 ml-1" />
-          </Button>
         </div>
       )}
 
-      {repos.length > 0 && (
+      {/* Repos table */}
+      {!isLoading && repos.length > 0 && (
         <>
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-muted-foreground/50 uppercase tracking-wider">
-              {repos.length} {repos.length === 1 ? 'Repository' : 'Repositories'}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: 12,
+            }}
+          >
+            <span style={{ fontFamily: 'var(--font-ibm-plex-mono)', fontSize: 12, color: 'var(--fm-text-muted)' }}>
+              {repos.length} {repos.length === 1 ? 'repository' : 'repositories'}
             </span>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {repos.map((repo) => (
-              <RepoCard
-                key={repo.id}
-                repo={repo}
-                onClick={() => router.push(`/repos/${repo.id}`)}
-                onDisconnect={canDeleteRepo ? () => setRepoToDisconnect(repo) : undefined}
-              />
-            ))}
+
+          <div style={{ border: '1px solid var(--fm-line)', borderRadius: 4, overflow: 'hidden' }}>
+            <table className="fm-table" style={{ tableLayout: 'fixed' }}>
+              <colgroup>
+                <col style={{ width: '35%' }} />
+                <col style={{ width: '15%' }} />
+                <col style={{ width: '25%' }} />
+                <col style={{ width: '15%' }} />
+                <col style={{ width: '10%' }} />
+              </colgroup>
+              <thead>
+                <tr>
+                  <th>Repository</th>
+                  <th>Branch</th>
+                  <th>Last deploy</th>
+                  <th>Status</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {repos.map((repo) => (
+                  <RepoRow
+                    key={repo.id}
+                    repo={repo}
+                    onClick={() => router.push(`/repos/${repo.id}`)}
+                    onDisconnect={canDeleteRepo ? () => setRepoToDisconnect(repo) : undefined}
+                    canDelete={canDeleteRepo}
+                  />
+                ))}
+              </tbody>
+            </table>
           </div>
         </>
       )}

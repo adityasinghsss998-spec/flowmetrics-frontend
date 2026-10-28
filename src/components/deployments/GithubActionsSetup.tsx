@@ -1,6 +1,6 @@
 'use client'
 
-import { Info, Code } from 'lucide-react'
+import { Code } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 interface GithubActionsSetupProps {
@@ -35,31 +35,29 @@ export default function GithubActionsSetup({ onManualRecord, repoId }: GithubAct
       })`
 
   return (
-    <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-8 text-center mt-6 shadow-sm flex flex-col items-center">
-      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-500/10 border border-indigo-500/20 mb-4">
-        <Info className="h-6 w-6 text-indigo-400" />
-      </div>
-      
-      <h3 className="text-lg font-semibold text-foreground">No deployments recorded yet</h3>
-      <p className="text-sm text-muted-foreground mt-2 max-w-lg mb-6">
+    <div className="rounded-[4px] border border-[var(--fm-line)] bg-[var(--fm-surface-raised)] p-6 sm:p-8 text-left mt-6">
+      <h3 className="font-mono text-base font-semibold text-[var(--fm-text)]">
+        No deployments recorded yet
+      </h3>
+      <p className="text-sm text-[var(--fm-text-muted)] mt-1.5 max-w-2xl mb-6">
         Automate deployment tracking by adding this step to the end of your GitHub Actions deployment workflow.
       </p>
 
-      <div className="w-full max-w-2xl bg-[#0d1117] border border-white/[0.08] rounded-xl overflow-hidden text-left shadow-inner">
-        <div className="flex items-center px-4 py-2 bg-white/[0.02] border-b border-white/[0.05]">
-          <Code className="h-4 w-4 text-muted-foreground mr-2" />
-          <span className="text-xs font-mono text-muted-foreground/80">.github/workflows/deploy.yml</span>
+      <div className="w-full bg-[var(--fm-surface)] border border-[var(--fm-line)] rounded-[4px] overflow-hidden">
+        <div className="flex items-center px-4 py-2 border-b border-[var(--fm-line)] font-mono text-xs text-[var(--fm-text-muted)]">
+          <Code className="h-3.5 w-3.5 mr-2" />
+          <span>.github/workflows/deploy.yml</span>
         </div>
         <div className="p-4 overflow-x-auto">
-          <pre className="text-xs font-mono text-slate-300">
+          <pre className="font-mono text-xs text-[var(--fm-text)] leading-relaxed">
             <code>{codeSnippet}</code>
           </pre>
         </div>
       </div>
 
-      <div className="mt-8 flex items-center justify-center gap-4 text-sm">
-        <span className="text-muted-foreground">Or, you can record one manually:</span>
-        <Button onClick={onManualRecord} variant="outline" className="h-9 border-white/[0.08] bg-white/[0.02] hover:bg-white/[0.06]">
+      <div className="mt-6 flex items-center gap-4 text-sm">
+        <span className="text-xs text-[var(--fm-text-muted)]">Or record a single event manually:</span>
+        <Button onClick={onManualRecord} variant="outline" size="sm">
           Record Deployment
         </Button>
       </div>
