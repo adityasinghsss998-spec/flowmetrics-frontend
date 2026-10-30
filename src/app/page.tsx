@@ -68,14 +68,8 @@ export default function LandingPage() {
       {/* ── Product panels ──────────────────────────────────── */}
       <PanelScene />
 
-      {/* ── Ask in plain language (mascot + AI description) ──── */}
-      {/*
-       * No dedicated AI panel screenshot has been captured yet.
-       * The section renders with the mascot and paragraph only.
-       * Once a real screenshot is captured via Playwright (with the
-       * ai-service running), pass it as: screenshotSrc="/screenshot-ai-panel.png"
-       */}
-      <AskAiSection />
+      {/* ── Ask in plain language (mascot + AI description + real screenshot) ──── */}
+      <AskAiSection screenshotSrc="/screenshot-ai-panel.png" />
 
       {/* ── Metrics definition list ─────────────────────────── */}
       <section
