@@ -13,6 +13,7 @@
  *   - Cropped preview frame for the AI panel screenshot (1px border line).
  */
 
+import Image from 'next/image'
 import FlowMetricsMascot from '@/components/ai/FlowMetricsMascot'
 
 export default function AuthRightPanel() {
@@ -38,30 +39,26 @@ export default function AuthRightPanel() {
         />
       </div>
 
-      {/* Real AI panel screenshot preview frame (cropped by right/bottom edges) */}
+      {/* Real AI panel screenshot neatly framed with 1px border and contained alignment */}
       <div
+        className="w-full"
         style={{
           border: '1px solid var(--fm-line)',
           borderRadius: 4,
           overflow: 'hidden',
-          flex: 1,
           background: 'var(--fm-surface-raised)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
         }}
       >
-        <p
-          style={{
-            fontFamily: 'var(--font-ibm-plex-mono), monospace',
-            fontSize: 12,
-            color: 'var(--fm-text-muted)',
-            textAlign: 'center',
-            padding: 24,
-          }}
-        >
-          AI panel screenshot pending
-        </p>
+        <Image
+          src="/screenshot-ai-panel.png"
+          alt="flowmetrics-ai answering a question about repository cycle time trend"
+          width={1024}
+          height={510}
+          priority
+          sizes="(max-width: 1024px) 100vw, 50vw"
+          className="w-full h-auto object-contain"
+          style={{ display: 'block' }}
+        />
       </div>
     </div>
   )
