@@ -28,6 +28,27 @@ api.interceptors.response.use(
   async (error) => {
     const original = error.config
 
+    if (!original) {
+      return Promise.reject(error)
+    }
+
+    // Retry transient Render hibernation / cold start errors (502, 503, 504, 429 hibernate-rate-limited, or temporary network drop)
+    const status = error.response?.status
+    const isColdStart =
+      status === 502 ||
+      status === 503 ||
+      status === 504 ||
+      (status === 429 &&
+        (error.response?.headers?.['x-render-routing'] === 'hibernate-rate-limited' ||
+          error.response?.data?.message === 'Too many requests, please try again later')) ||
+      (!error.response && error.message === 'Network Error')
+
+    original._retryCount = (original._retryCount || 0) + 1
+    if (isColdStart && original._retryCount <= 2) {
+      await new Promise((resolve) => setTimeout(resolve, 2000))
+      return api(original)
+    }
+
     const isAuthEndpoint =
       original?.url?.includes('/auth/login') ||
       original?.url?.includes('/auth/register') ||

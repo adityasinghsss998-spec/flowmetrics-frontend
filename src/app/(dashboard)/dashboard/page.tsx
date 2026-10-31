@@ -193,9 +193,23 @@ function CreateOrgModal({
         throw err
       }),
     onSuccess: (res) => {
-      qc.invalidateQueries({ queryKey: ['orgs'] })
       const newOrg = res.data?.data
-      if (newOrg?.id) onCreated(String(newOrg.id))
+      if (newOrg) {
+        qc.setQueryData(['orgs'], (old: any) => {
+          const list = Array.isArray(old) ? old : []
+          if (!list.some((o: any) => o.id === newOrg.id)) {
+            return [...list, newOrg]
+          }
+          return list
+        })
+        if (newOrg.id) {
+          onCreated(String(newOrg.id))
+          try {
+            localStorage.setItem('flowmetrics-active-org', String(newOrg.id))
+          } catch {}
+        }
+      }
+      qc.invalidateQueries({ queryKey: ['orgs'] })
       setName('')
       setGithubOrg('')
       onClose()
@@ -323,6 +337,7 @@ function ConnectModal({
   isGithubConnected,
   isRepoError,
   onConnectGithub,
+  onRetryRepos,
 }: {
   open: boolean
   onClose: () => void
@@ -339,8 +354,10 @@ function ConnectModal({
   isGithubConnected: boolean
   isRepoError: boolean
   onConnectGithub: () => void
+  onRetryRepos?: () => void
 }) {
-  const showGithubConnect = !isGithubConnected || isRepoError
+  const showGithubConnect = !isGithubConnected
+  const showRepoError = isGithubConnected && isRepoError
 
   return (
     <Dialog open={open} onOpenChange={(val) => { if (!val) onClose() }}>
@@ -394,6 +411,25 @@ function ConnectModal({
                 className="btn-accent mx-auto"
               >
                 Connect GitHub account
+              </button>
+            </div>
+          ) : showRepoError ? (
+            <div
+              className="p-6 text-center space-y-3"
+              style={{ background: 'var(--fm-surface)', borderRadius: 4, border: '1px solid var(--fm-line)' }}
+            >
+              <p style={{ fontFamily: 'var(--font-ibm-plex-sans)', fontSize: 14, color: 'var(--fm-text)' }}>
+                Unable to load repositories
+              </p>
+              <p style={{ fontSize: 13, color: 'var(--fm-text-muted)', fontFamily: 'var(--font-ibm-plex-sans)' }}>
+                The GitHub service may be waking up. Please retry in a moment.
+              </p>
+              <button
+                type="button"
+                onClick={onRetryRepos}
+                className="btn-accent mx-auto"
+              >
+                Retry
               </button>
             </div>
           ) : !activeOrgId ? (
@@ -817,7 +853,10 @@ export default function DashboardPage() {
   const [repoToDisconnect, setRepoToDisconnect] = useState<Repository | null>(null)
 
   useEffect(() => {
-    if (ctxOrgId && !selectedOrgId) {
+    const savedOrgId = typeof window !== 'undefined' ? localStorage.getItem('flowmetrics-active-org') : null
+    if (savedOrgId && !selectedOrgId) {
+      setSelectedOrgId(savedOrgId)
+    } else if (ctxOrgId && !selectedOrgId) {
       setSelectedOrgId(String(ctxOrgId))
     }
   }, [ctxOrgId, selectedOrgId])
@@ -825,6 +864,9 @@ export default function DashboardPage() {
   const handleSelectOrg = (id: string) => {
     setSelectedOrgId(id)
     setCtxOrgId(id)
+    try {
+      localStorage.setItem('flowmetrics-active-org', id)
+    } catch {}
   }
 
   const orgsQuery = useQuery<OrgWithMembers[]>({
@@ -945,6 +987,7 @@ export default function DashboardPage() {
         isGithubConnected={isGithubConnected}
         isRepoError={availableReposQuery.isError}
         onConnectGithub={connectGithub}
+        onRetryRepos={() => availableReposQuery.refetch()}
       />
 
       {/* Page header */}
