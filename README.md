@@ -1,5 +1,9 @@
 cat > /mnt/user-data/outputs/README.md << 'READMEEOF'
 <div align="center">
+<img width="1635" height="1197" alt="flowmetrics_current" src="https://github.com/user-attachments/assets/2cf5a55c-ec79-43ff-9bc4-f20aef3feadc" />
+
+
+<img width="1847" height="940" alt="image" src="https://github.com/user-attachments/assets/8cee0707-e580-46c7-8bda-56806fdb07e2" />
 
 <img src="https://img.shields.io/badge/Status-Live%20%26%20Deployed-brightgreen?style=for-the-badge" />
 <img src="https://img.shields.io/badge/Architecture-Microservices-6366f1?style=for-the-badge" />
@@ -902,13 +906,7 @@ Frontend              Vercel (free)     Auto-deploy from GitHub
 Keep-alive            UptimeRobot       Pings /health every 5 min
 ```
 
-### Planned: Oracle Cloud Always Free VM
 
-Single Ubuntu VM (4 ARM cores, 24GB RAM, free forever) running all services
-via Docker Compose. One thing to manage instead of eight separate services.
-Requires a credit card for Oracle signup (card never charged on Always Free tier).
-
----
 
 ## Author
 
