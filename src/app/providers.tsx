@@ -32,6 +32,11 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     setMounted(true)
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL
+    if (apiUrl) {
+      const gatewayUrl = apiUrl.replace(/\/api\/v1\/?$/, '')
+      fetch(`${gatewayUrl}/warmup`).catch(() => {})
+    }
   }, [])
 
   return (
