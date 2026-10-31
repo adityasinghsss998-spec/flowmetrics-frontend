@@ -49,6 +49,7 @@ export default function RepoDashboardPage() {
       api.get(`/analytics/dora?repoId=${repoId}&days=${days}`).then((r) => r.data.data),
     staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
+    retry: 2,
     enabled: !!repoId,
   })
 
@@ -58,6 +59,7 @@ export default function RepoDashboardPage() {
       api.get(`/analytics/cycle-time/trend?repoId=${repoId}&days=${days}`).then((r) => r.data.data),
     staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
+    retry: 2,
     enabled: !!repoId,
   })
 
@@ -67,6 +69,7 @@ export default function RepoDashboardPage() {
       api.get(`/analytics/cycle-time/by-size?repoId=${repoId}&days=${days}`).then((r) => r.data.data),
     staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
+    retry: 2,
     enabled: !!repoId,
   })
 
@@ -76,6 +79,7 @@ export default function RepoDashboardPage() {
       api.get(`/analytics/prs/open?repoId=${repoId}`).then((r) => r.data.data),
     staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
+    retry: 2,
     enabled: !!repoId,
   })
 
@@ -85,8 +89,17 @@ export default function RepoDashboardPage() {
       api.get(`/analytics/deployments/recent?repoId=${repoId}&limit=15`).then((r) => r.data.data),
     staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
+    retry: 2,
     enabled: !!repoId,
   })
+
+  const handleRetryMetrics = () => {
+    doraQuery.refetch()
+    cycleTrendQuery.refetch()
+    prSizeQuery.refetch()
+    openPrsQuery.refetch()
+    deploymentsQuery.refetch()
+  }
 
   const dora = doraQuery.data
 
@@ -234,17 +247,33 @@ export default function RepoDashboardPage() {
       {/* Error banner */}
       {hasError && (
         <div
-          className="flex items-center gap-3 p-4 mb-6"
+          className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 mb-6"
           style={{
             border: '1px solid color-mix(in srgb, var(--fm-status-poor) 30%, transparent)',
             borderRadius: 4,
             background: 'color-mix(in srgb, var(--fm-status-poor) 8%, transparent)',
           }}
         >
-          <AlertTriangle className="h-4 w-4 shrink-0" style={{ color: 'var(--fm-status-poor)' }} />
-          <span style={{ fontSize: 13, color: 'var(--fm-text-muted)', fontFamily: 'var(--font-ibm-plex-sans)' }}>
-            Failed to load some analytics data. Check API connectivity.
-          </span>
+          <div className="flex items-center gap-3">
+            <AlertTriangle className="h-4 w-4 shrink-0" style={{ color: 'var(--fm-status-poor)' }} />
+            <span style={{ fontSize: 13, color: 'var(--fm-text-muted)', fontFamily: 'var(--font-ibm-plex-sans)' }}>
+              Analytics service is starting up or temporarily busy. Metrics may take a moment to load.
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={handleRetryMetrics}
+            className="fm-btn-quiet shrink-0"
+            style={{
+              padding: '4px 12px',
+              fontSize: 12,
+              borderRadius: 4,
+              border: '1px solid var(--fm-line)',
+              background: 'var(--fm-surface)',
+            }}
+          >
+            <span>Retry loading</span>
+          </button>
         </div>
       )}
 

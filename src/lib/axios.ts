@@ -32,27 +32,37 @@ api.interceptors.response.use(
       return Promise.reject(error)
     }
 
-    // Retry transient Render hibernation / cold start errors (502, 503, 504, 429 hibernate-rate-limited, or temporary network drop)
+    const isAuthEndpoint =
+      Boolean(
+        original?.url?.includes('/auth/login') ||
+        original?.url?.includes('/auth/register') ||
+        original?.url?.includes('/auth/refresh')
+      )
+
+    // Retry transient Render hibernation / cold start / rate-limit errors
     const status = error.response?.status
+    const responseData = error.response?.data
+    const isRenderHibernate =
+      status === 429 &&
+      (error.response?.headers?.['x-render-routing'] === 'hibernate-rate-limited' ||
+        (typeof responseData === 'string' && responseData.includes('Too Many Requests')) ||
+        (typeof responseData?.message === 'string' &&
+          (responseData.message.includes('Too many requests') ||
+           responseData.message.toLowerCase().includes('rate limit'))))
+
     const isColdStart =
       status === 502 ||
       status === 503 ||
       status === 504 ||
-      (status === 429 &&
-        (error.response?.headers?.['x-render-routing'] === 'hibernate-rate-limited' ||
-          error.response?.data?.message === 'Too many requests, please try again later')) ||
+      isRenderHibernate ||
       (!error.response && error.message === 'Network Error')
 
     original._retryCount = (original._retryCount || 0) + 1
-    if (isColdStart && original._retryCount <= 2) {
-      await new Promise((resolve) => setTimeout(resolve, 2000))
+    if (!isAuthEndpoint && isColdStart && original._retryCount <= 4) {
+      const delay = original._retryCount * 2500
+      await new Promise((resolve) => setTimeout(resolve, delay))
       return api(original)
     }
-
-    const isAuthEndpoint =
-      original?.url?.includes('/auth/login') ||
-      original?.url?.includes('/auth/register') ||
-      original?.url?.includes('/auth/refresh')
 
     if (error.response?.status === 401 && !original._retry && !isAuthEndpoint) {
       if (isRefreshing) {
